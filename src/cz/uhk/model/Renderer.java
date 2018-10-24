@@ -134,20 +134,7 @@ public class Renderer implements GLEventListener, MouseListener,
         //texture
         texture2D.bind(shaderProgramLight,"textureSampler", 0);
 
-        //plocha
-        gl.glUniform1i(locMode,0);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
-
-        switch (functions %3){
-            case 1:
-                gl.glUniform1i(locMode,1);
-                buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
-                break;
-            case 2:
-                gl.glUniform1i(locMode,2);
-                buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
-                break;
-        }
+        functionSelecting(gl);
     }
 
     private void renderFromViewer(GL2GL3 gl, int shaderProgram){
@@ -171,7 +158,12 @@ public class Renderer implements GLEventListener, MouseListener,
         //texture
         texture2D.bind(shaderProgram,"textureSampler", 0);
 
-        //plocha
+        functionSelecting(gl);
+    }
+
+    private void functionSelecting(GL2GL3 gl){
+
+	    //plocha
         gl.glUniform1i(locMode,0);
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
 
