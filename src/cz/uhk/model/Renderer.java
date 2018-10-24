@@ -1,5 +1,6 @@
 package cz.uhk.model;
 
+import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2GL3;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
@@ -30,10 +31,10 @@ public class Renderer implements GLEventListener, MouseListener,
 		MouseMotionListener, KeyListener {
 
 	private int width, height, ox, oy;
-    private int locTime, locViewMat, locProjMat;
+    private int locTime, locViewMat, locProjMat, locMode;
     private float time = 0;
 
-    private int shaderProgram;
+    private int shaderProgram, shaderProgramLight;
 
     private Mat4 viewMat, projMat;
     private Camera camera;
@@ -42,6 +43,8 @@ public class Renderer implements GLEventListener, MouseListener,
 	private OGLTextRenderer textRenderer;
 
 	private OGLTexture2D texture2D;
+	private OGLRenderTarget renderTarget;
+	private OGLTexture2D.Viewer textureViewer;
 
 	@Override
 	public void init(GLAutoDrawable glDrawable) {
@@ -59,7 +62,10 @@ public class Renderer implements GLEventListener, MouseListener,
 		// e.g. in Eclipse via main menu Project/Properties/Java Build Path/Source
 		shaderProgram = ShaderUtils.loadProgram(gl, "/start.vert",
 				"/start.frag",
-				null,null,null,null); 
+				null,null,null,null);
+        shaderProgramLight = ShaderUtils.loadProgram(gl, "/light.vert",
+                "/light.frag",
+                null,null,null,null);
 		
 		//shorter version of loading shader program
 		//shaderProgram = ShaderUtils.loadProgram(gl, "/lvl1basic/p01start/p04utils/start"); 
@@ -69,22 +75,23 @@ public class Renderer implements GLEventListener, MouseListener,
 		
 		//createBuffers(gl);
 		buffers= GridFactory.create(gl,50,50);
-		locViewMat = gl.glGetUniformLocation(shaderProgram, "viewMat");
-        locProjMat = gl.glGetUniformLocation(shaderProgram, "projMat");
 
         Vec3D position = new Vec3D(5, 5, 5);
         Vec3D direction = new Vec3D(-1, -1, -1);
         Vec3D up = new Vec3D(1, 0, 0);
         viewMat = new Mat4ViewRH(position, direction, up);
-        projMat = new Mat4PerspRH(5, 5, 0.001, 20);
+        projMat = new Mat4PerspRH(5, 5, 0.1, 20);
 
         camera = new Camera().withPosition(position)
                  .withZenith(-Math.PI/5.)
                  .withAzimuth(Math.PI*(5/4.));
 
-        locTime = gl.glGetUniformLocation(shaderProgram, "time");
-
         texture2D = new OGLTexture2D(gl, "/textures/bricks.jpg");
+        textureViewer = new OGLTexture2D.Viewer(gl);
+
+        renderTarget = new OGLRenderTarget(gl, 256, 256);
+
+        gl.glEnable(GL.GL_DEPTH_TEST);
 	}
 
     /**
@@ -94,30 +101,68 @@ public class Renderer implements GLEventListener, MouseListener,
 	@Override
 	public void display(GLAutoDrawable glDrawable) {
 		GL2GL3 gl = glDrawable.getGL().getGL2GL3();
-		
-		gl.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
-		
-		// set the current shader to be used, could have been done only once (in
-		// init) in this sample (only one shader used)
-		gl.glUseProgram(shaderProgram);
-		time += 0.1;
-		gl.glUniform1f(locTime, time); // correct shader must be set before this
 
+		renderFromLight(gl, shaderProgramLight);
+		renderFromViewer(gl, shaderProgram);
+
+        textureViewer.view(texture2D,-1,-1,0.5 );
+        textureViewer.view(renderTarget.getColorTexture(), -1, -0.5, 0.5);
+        textureViewer.view(renderTarget.getDepthTexture(), -1, 0, 0.5);
+	}
+
+    private void renderFromLight(GL2GL3 gl, int shaderProgramLight){
+        gl.glUseProgram(shaderProgramLight);
+        renderTarget.bind();
+
+        gl.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
+
+        locViewMat = gl.glGetUniformLocation(shaderProgramLight, "viewMat");
+        locProjMat = gl.glGetUniformLocation(shaderProgramLight, "projMat");
+        locTime = gl.glGetUniformLocation(shaderProgramLight, "time");
+        locMode = gl.glGetUniformLocation(shaderProgramLight, "mode");
+
+        time += 0.1;
+        gl.glUniform1f(locTime, time); // correct shader must be set before this
         gl.glUniformMatrix4fv(locViewMat, 1, false, camera.getViewMatrix().floatArray(), 0);
         gl.glUniformMatrix4fv(locProjMat, 1, false, projMat.floatArray(), 0);
-		
-		//texture
+
+        //texture
+        texture2D.bind(shaderProgramLight,"textureSampler", 0);
+
+        gl.glUniform1i(locMode,1);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+
+        gl.glUniform1i(locMode,0);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+    }
+
+    private void renderFromViewer(GL2GL3 gl, int shaderProgram){
+        gl.glUseProgram(shaderProgram);
+        gl.glBindFramebuffer(GL2GL3.GL_FRAMEBUFFER, 0);
+        gl.glViewport(0,0,width,height);
+
+        gl.glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
+        gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
+
+        locViewMat = gl.glGetUniformLocation(shaderProgram, "viewMat");
+        locProjMat = gl.glGetUniformLocation(shaderProgram, "projMat");
+        locTime = gl.glGetUniformLocation(shaderProgram, "time");
+        locMode = gl.glGetUniformLocation(shaderProgram, "mode");
+
+        time += 0.1;
+        gl.glUniform1f(locTime, time); // correct shader must be set before this
+        gl.glUniformMatrix4fv(locViewMat, 1, false, camera.getViewMatrix().floatArray(), 0);
+        gl.glUniformMatrix4fv(locProjMat, 1, false, projMat.floatArray(), 0);
+
+        //texture
         texture2D.bind(shaderProgram,"textureSampler", 0);
 
-        // bind and draw
-		buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
-		
-		String text = new String(this.getClass().getName());
-		textRenderer.drawStr2D(3, height - 20, text);
-		textRenderer.drawStr2D(width - 90, 3, " (c) PGRF UHK");
-
-	}
+        gl.glUniform1i(locMode,1);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        gl.glUniform1i(locMode,0);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+    }
 
     /**
      *

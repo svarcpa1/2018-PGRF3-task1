@@ -82,4 +82,4 @@ void main() {
 
 	//textures
 	textCoordinates=inTexture;
-} 
+}
