@@ -31,7 +31,7 @@ public class Renderer implements GLEventListener, MouseListener,
 		MouseMotionListener, KeyListener {
 
 	private int width, height, ox, oy;
-	private boolean modeOfRendering=true;  //if -> fill, else -> line
+	private boolean modeOfRendering=true, modeOfProjection=true;  //if -> fill, else -> line
     private int locTime, locViewMat, locProjMat, locMode;
     private float time = 0;
 
@@ -65,14 +65,13 @@ public class Renderer implements GLEventListener, MouseListener,
                 "/light.frag",
                 null,null,null,null);
 
-
 		buffers= GridFactory.create(gl,50,50);
 
         Vec3D position = new Vec3D(5, 5, 5);
         Vec3D direction = new Vec3D(-1, -1, -1);
         Vec3D up = new Vec3D(1, 0, 0);
+
         viewMat = new Mat4ViewRH(position, direction, up);
-        projMat = new Mat4PerspRH(5, 5, 0.1, 20);
 
         camera = new Camera().withPosition(position)
                  .withZenith(-Math.PI/5.)
@@ -94,11 +93,18 @@ public class Renderer implements GLEventListener, MouseListener,
 	public void display(GLAutoDrawable glDrawable) {
 		GL2GL3 gl = glDrawable.getGL().getGL2GL3();
 
+		if(modeOfProjection){
+			projMat = new Mat4PerspRH(Math.PI / 4, height / (double) width, 1, 100.0);
+		}else {
+			projMat = new Mat4OrthoRH(Math.PI / 4, height / (double) width, 1, 100.0);
+		}
+
         if(modeOfRendering){
             gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_FILL);
         }else {
             gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_LINE);
         }
+
 
 		renderFromLight(gl, shaderProgramLight);
 		renderFromViewer(gl, shaderProgram);
@@ -175,8 +181,11 @@ public class Renderer implements GLEventListener, MouseListener,
 		this.width = width;
 		this.height = height;
 
-		double ratio = height / (double) width;
-		projMat = new Mat4PerspRH(Math.PI / 4, ratio, 1, 100.0);
+		if(modeOfProjection){
+            projMat = new Mat4PerspRH(Math.PI / 4, height / (double) width, 1, 100.0);
+        }else {
+            projMat = new Mat4OrthoRH(Math.PI / 4, height / (double) width, 1, 100.0);
+        }
 
 		textRenderer.updateSize(width, height);
 	}
@@ -201,7 +210,7 @@ public class Renderer implements GLEventListener, MouseListener,
 	}
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		camera = camera.addAzimuth( Math.PI * (ox - e.getX()) / width).addZenith( Math.PI * (e.getY() - oy) / width);
+		camera = camera.addAzimuth(Math.PI * (ox - e.getX()) / width).addZenith(Math.PI * (e.getY() - oy) / width);
 		ox = e.getX();
 		oy = e.getY();
 	}
@@ -232,6 +241,11 @@ public class Renderer implements GLEventListener, MouseListener,
             //M for changing mode (fill, line)
             case KeyEvent.VK_M:
                 modeOfRendering = !modeOfRendering;
+                break;
+            //P for changing projection (persp, orto)
+            case KeyEvent.VK_P:
+                modeOfProjection = !modeOfProjection;
+                System.out.println(modeOfProjection);
                 break;
 		}
 	}
