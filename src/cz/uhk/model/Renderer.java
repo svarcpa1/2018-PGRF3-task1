@@ -8,11 +8,7 @@ import cz.uhk.grid.GridFactory;
 import oglutils.*;
 import transforms.*;
 
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 
 /**
  * GLSL sample:<br/>
@@ -31,10 +27,11 @@ public class Renderer implements GLEventListener, MouseListener,
 		MouseMotionListener, KeyListener {
 
 	private int width, height, ox, oy;
-	private boolean modeOfRendering=true, modeOfProjection=true;  //if -> fill, else -> line
+	private boolean modeOfRendering=true, modeOfProjection=true;
     private int locTime, locViewMat, locProjMat, locMode;
     private int functions =0;
-    private float time = 0;
+    private float time = 0.5f;
+    private float tmp = 1f;
 
     private int shaderProgram, shaderProgramLight;
 
@@ -126,8 +123,11 @@ public class Renderer implements GLEventListener, MouseListener,
         locTime = gl.glGetUniformLocation(shaderProgramLight, "time");
         locMode = gl.glGetUniformLocation(shaderProgramLight, "mode");
 
-        time += 0.1;
-        gl.glUniform1f(locTime, time); // correct shader must be set before this
+        time = time + tmp;
+        if(time >= 100.0f) tmp = -1f;
+        if(time <= 0.0f) tmp = 1f;
+
+        gl.glUniform1f(locTime, time/10); // correct shader must be set before this
         gl.glUniformMatrix4fv(locViewMat, 1, false, camera.getViewMatrix().floatArray(), 0);
         gl.glUniformMatrix4fv(locProjMat, 1, false, projMat.floatArray(), 0);
 
@@ -150,8 +150,12 @@ public class Renderer implements GLEventListener, MouseListener,
         locTime = gl.glGetUniformLocation(shaderProgram, "time");
         locMode = gl.glGetUniformLocation(shaderProgram, "mode");
 
-        time += 0.1;
-        gl.glUniform1f(locTime, time); // correct shader must be set before this
+
+        time = time + tmp;
+        if(time >= 100.0f) tmp = -1f;
+        if(time <= 0.0f) tmp = 1f;
+
+        gl.glUniform1f(locTime, time/10); // correct shader must be set before this
         gl.glUniformMatrix4fv(locViewMat, 1, false, camera.getViewMatrix().floatArray(), 0);
         gl.glUniformMatrix4fv(locProjMat, 1, false, projMat.floatArray(), 0);
 

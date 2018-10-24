@@ -24,7 +24,7 @@ vec3 getTurbine(vec2 xy){
 
     float x = r*cos(zenith)*sin(azimuth);
     float y = r*sin(zenith)*sin(azimuth);
-    float z = r*cos(azimuth);
+    float z = r*cos(azimuth)*0.1*time;
 
     return vec3(x, y, z);
 }
