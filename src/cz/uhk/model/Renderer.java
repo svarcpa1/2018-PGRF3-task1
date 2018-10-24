@@ -31,6 +31,7 @@ public class Renderer implements GLEventListener, MouseListener,
 		MouseMotionListener, KeyListener {
 
 	private int width, height, ox, oy;
+	private boolean modeOfRendering=true;  //if -> fill, else -> line
     private int locTime, locViewMat, locProjMat, locMode;
     private float time = 0;
 
@@ -64,7 +65,7 @@ public class Renderer implements GLEventListener, MouseListener,
                 "/light.frag",
                 null,null,null,null);
 
-        gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_FILL);
+
 		buffers= GridFactory.create(gl,50,50);
 
         Vec3D position = new Vec3D(5, 5, 5);
@@ -77,7 +78,7 @@ public class Renderer implements GLEventListener, MouseListener,
                  .withZenith(-Math.PI/5.)
                  .withAzimuth(Math.PI*(5/4.));
 
-        texture2D = new OGLTexture2D(gl, "/textures/bricks.jpg");
+        texture2D = new OGLTexture2D(gl, "/textures/mosaic.jpg");
         textureViewer = new OGLTexture2D.Viewer(gl);
 
         renderTarget = new OGLRenderTarget(gl, 256, 256);
@@ -92,6 +93,12 @@ public class Renderer implements GLEventListener, MouseListener,
 	@Override
 	public void display(GLAutoDrawable glDrawable) {
 		GL2GL3 gl = glDrawable.getGL().getGL2GL3();
+
+        if(modeOfRendering){
+            gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_FILL);
+        }else {
+            gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_LINE);
+        }
 
 		renderFromLight(gl, shaderProgramLight);
 		renderFromViewer(gl, shaderProgram);
@@ -169,7 +176,7 @@ public class Renderer implements GLEventListener, MouseListener,
 		this.height = height;
 
 		double ratio = height / (double) width;
-		projMat = new Mat4PerspRH(Math.PI / 4, ratio, 0.01, 1000.0);
+		projMat = new Mat4PerspRH(Math.PI / 4, ratio, 1, 100.0);
 
 		textRenderer.updateSize(width, height);
 	}
@@ -204,12 +211,28 @@ public class Renderer implements GLEventListener, MouseListener,
 	@Override
 	public void keyPressed(KeyEvent e) {
 		switch (e.getKeyCode()) {
-			case KeyEvent.VK_A: camera = camera.left(0.1); break;
-			case KeyEvent.VK_S: camera = camera.backward(0.1); break;
-			case KeyEvent.VK_D: camera = camera.right(0.1); break;
-			case KeyEvent.VK_W: camera = camera.forward(0.1); break;
-			case KeyEvent.VK_R: camera = camera.up(0.1); break;
-			case KeyEvent.VK_F: camera = camera.down(0.1); break;
+			case KeyEvent.VK_A:
+			    camera = camera.left(0.1);
+			    break;
+			case KeyEvent.VK_S:
+			    camera = camera.backward(0.1);
+			    break;
+			case KeyEvent.VK_D:
+			    camera = camera.right(0.1);
+			    break;
+			case KeyEvent.VK_W:
+			    camera = camera.forward(0.1);
+			    break;
+			case KeyEvent.VK_R:
+			    camera = camera.up(0.1);
+			    break;
+			case KeyEvent.VK_F:
+                camera = camera.down(0.1);
+                break;
+            //M for changing mode (fill, line)
+            case KeyEvent.VK_M:
+                modeOfRendering = !modeOfRendering;
+                break;
 		}
 	}
 	@Override

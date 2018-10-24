@@ -26,6 +26,10 @@ vec3 getSphere(vec2 xy){
     float y = 2*sin(azimuth)*cos(zenith)*r;
     float z = 0.5*sin(zenith)*r;
 
+/*    float x = (4/3)^azimuth*sin(zenith)*sin(zenith)*cos(azimuth);
+    float y = (4/3)^azimuth*sin(zenith)*sin(zenith)*sin(azimuth);
+    float z = (4/3)^azimuth*sin(zenith)*cos(zenith);*/
+
     return vec3(x, y, z);
 }
 
@@ -56,30 +60,28 @@ void main() {
     if(mode == 1){
         pos4 = vec4(getSphere(pos), 1.0);
         normal= getSphereNormal2(pos);
+        //normal= getSphereNormal(pos);
+
+        //toto dělá, že se světlo točí s náma
         normal = inverse(transpose(mat3(viewMat))) * normal;
     }else{
         pos4=vec4(pos*3, 2.0, 1.0);
         normal=vec3(pos,2.0);
+
+        //toto dělá, že se světlo točí s náma
+        normal = inverse(transpose(mat3(viewMat))) * normal;
     }
 
-
-    vertColor = pos4.xyz;
 	gl_Position = projMat * viewMat * pos4;
 
-
 	//vypocet osvetleni
-
-	//vec3 normal = pos4.xyz;
-	//vec3 normal= getSphereNormal(pos);
-	normal= getSphereNormal2(pos);
-	//toto dělá, že se světlo točí s náma
-	normal = inverse(transpose(mat3(viewMat))) * normal;
-
 	vec3 lightPos = vec3(5, 5, 1);
 	vec3 light = lightPos-(viewMat*pos4).xyz;
 
+	//vypocet barvy
+	vertColor = pos4.xyz;
 	vertColor = vec3(dot(normalize(normal), normalize(light)));
 
 	//textures
 	textCoordinates=inTexture;
-} 
+}
