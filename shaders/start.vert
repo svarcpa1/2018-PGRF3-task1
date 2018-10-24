@@ -28,12 +28,14 @@ vec3 getSphere(vec2 xy){
     return vec3(x, y, z);
 }
 
+//výpočet normál pomocí diferencí
 vec3 getSphereNormal(vec2 xy){
     vec3 u = getSphere(xy + vec2(0.001,0)) - getSphere(xy - vec2(0.001,0));
     vec3 v = getSphere(xy + vec2(0, 0.001)) - getSphere(xy - vec2(0, 0.001));
     return cross(u,v);
 }
 
+//výpočet normál pomocí parciální derivace
 vec3 getSphereNormal2(vec2 xy){
     float az = xy.x * PI;
     float ze = xy.y * PI/2;
@@ -58,6 +60,7 @@ void main() {
 	//vec3 normal = pos4.xyz;
 	//vec3 normal= getSphereNormal(pos);
 	vec3 normal= getSphereNormal2(pos);
+	//tot dělá, že se světlo točí s náma
 	normal = inverse(transpose(mat3(viewMat))) * normal;
 
 	vec3 lightPos = vec3(5, 5, 1);
