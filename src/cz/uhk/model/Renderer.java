@@ -1,0 +1,195 @@
+package cz.uhk.model;
+
+import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLEventListener;
+import cz.uhk.grid.GridFactory;
+import oglutils.*;
+import transforms.*;
+
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.KeyEvent;
+
+/**
+ * GLSL sample:<br/>
+ * Read and compile shader from files "/shader/glsl01/start.*" using ShaderUtils
+ * class in oglutils package (older GLSL syntax can be seen in
+ * "/shader/glsl01/startForOlderGLSL")<br/>
+ * Manage (create, bind, draw) vertex and index buffers using OGLBuffers class
+ * in oglutils package<br/>
+ * Requires JOGL 2.3.0 or newer
+ * 
+ * @author PGRF FIM UHK
+ * @version 2.0
+ * @since 2015-09-05
+ */
+public class Renderer implements GLEventListener, MouseListener,
+		MouseMotionListener, KeyListener {
+
+	private int width, height, ox, oy;
+    private int locTime, locViewMat, locProjMat;
+    private float time = 0;
+
+    private int shaderProgram;
+
+    private Mat4 viewMat, projMat;
+    private Camera camera;
+
+	private OGLBuffers buffers;
+	private OGLTextRenderer textRenderer;
+
+	private OGLTexture2D texture2D;
+
+	@Override
+	public void init(GLAutoDrawable glDrawable) {
+
+	    // check whether shaders are supported
+		GL2GL3 gl = glDrawable.getGL().getGL2GL3();
+		OGLUtils.shaderCheck(gl);
+		
+		OGLUtils.printOGLparameters(gl);
+		
+		textRenderer = new OGLTextRenderer(gl, glDrawable.getSurfaceWidth(), glDrawable.getSurfaceHeight());
+		
+		// shader files are in /shaders/ directory
+		// shaders directory must be set as a source directory of the project
+		// e.g. in Eclipse via main menu Project/Properties/Java Build Path/Source
+		shaderProgram = ShaderUtils.loadProgram(gl, "/start.vert",
+				"/start.frag",
+				null,null,null,null); 
+		
+		//shorter version of loading shader program
+		//shaderProgram = ShaderUtils.loadProgram(gl, "/lvl1basic/p01start/p04utils/start"); 
+        gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_FILL);
+		//for older GLSL version 
+		//shaderProgram = ShaderUtils.loadProgram(gl, "/lvl1basic/p01start/p04utils/startForOlderGLSL");
+		
+		//createBuffers(gl);
+		buffers= GridFactory.create(gl,50,50);
+		locViewMat = gl.glGetUniformLocation(shaderProgram, "viewMat");
+        locProjMat = gl.glGetUniformLocation(shaderProgram, "projMat");
+
+        Vec3D position = new Vec3D(5, 5, 5);
+        Vec3D direction = new Vec3D(-1, -1, -1);
+        Vec3D up = new Vec3D(1, 0, 0);
+        viewMat = new Mat4ViewRH(position, direction, up);
+        projMat = new Mat4PerspRH(5, 5, 0.001, 20);
+
+        camera = new Camera().withPosition(position)
+                 .withZenith(-Math.PI/5.)
+                 .withAzimuth(Math.PI*(5/4.));
+
+        locTime = gl.glGetUniformLocation(shaderProgram, "time");
+
+        texture2D = new OGLTexture2D(gl, "/textures/bricks.jpg");
+	}
+
+    /**
+     *
+     * @param glDrawable
+     */
+	@Override
+	public void display(GLAutoDrawable glDrawable) {
+		GL2GL3 gl = glDrawable.getGL().getGL2GL3();
+		
+		gl.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
+		
+		// set the current shader to be used, could have been done only once (in
+		// init) in this sample (only one shader used)
+		gl.glUseProgram(shaderProgram);
+		time += 0.1;
+		gl.glUniform1f(locTime, time); // correct shader must be set before this
+
+        gl.glUniformMatrix4fv(locViewMat, 1, false, camera.getViewMatrix().floatArray(), 0);
+        gl.glUniformMatrix4fv(locProjMat, 1, false, projMat.floatArray(), 0);
+		
+		//texture
+        texture2D.bind(shaderProgram,"textureSampler", 0);
+
+        // bind and draw
+		buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+		
+		String text = new String(this.getClass().getName());
+		textRenderer.drawStr2D(3, height - 20, text);
+		textRenderer.drawStr2D(width - 90, 3, " (c) PGRF UHK");
+
+	}
+
+    /**
+     *
+     * @param drawable
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     */
+	@Override
+	public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
+		this.width = width;
+		this.height = height;
+
+		double ratio = height / (double) width;
+		projMat = new Mat4PerspRH(Math.PI / 4, ratio, 0.01, 1000.0);
+
+		textRenderer.updateSize(width, height);
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+	}
+	@Override
+	public void mouseEntered(MouseEvent e) {
+	}
+	@Override
+	public void mouseExited(MouseEvent e) {
+	}
+	@Override
+	public void mousePressed(MouseEvent e) {
+		ox = e.getX();
+		oy = e.getY();
+	}
+	@Override
+	public void mouseReleased(MouseEvent e) {
+
+	}
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		camera = camera.addAzimuth( Math.PI * (ox - e.getX()) / width).addZenith( Math.PI * (e.getY() - oy) / width);
+		ox = e.getX();
+		oy = e.getY();
+	}
+	@Override
+	public void mouseMoved(MouseEvent e) {
+	}
+	@Override
+	public void keyPressed(KeyEvent e) {
+		switch (e.getKeyCode()) {
+			case KeyEvent.VK_A: camera = camera.left(0.1); break;
+			case KeyEvent.VK_S: camera = camera.backward(0.1); break;
+			case KeyEvent.VK_D: camera = camera.right(0.1); break;
+			case KeyEvent.VK_W: camera = camera.forward(0.1); break;
+			case KeyEvent.VK_R: camera = camera.up(0.1); break;
+			case KeyEvent.VK_F: camera = camera.down(0.1); break;
+		}
+	}
+	@Override
+	public void keyReleased(KeyEvent e) {
+	}
+	@Override
+	public void keyTyped(KeyEvent e) {
+	}
+
+    /**
+     *
+     * @param glDrawable
+     */
+	@Override
+	public void dispose(GLAutoDrawable glDrawable) {
+		GL2GL3 gl = glDrawable.getGL().getGL2GL3();
+		gl.glDeleteProgram(shaderProgram);
+	}
+}
