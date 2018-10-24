@@ -33,6 +33,7 @@ public class Renderer implements GLEventListener, MouseListener,
 	private int width, height, ox, oy;
 	private boolean modeOfRendering=true, modeOfProjection=true;  //if -> fill, else -> line
     private int locTime, locViewMat, locProjMat, locMode;
+    private int functions =0;
     private float time = 0;
 
     private int shaderProgram, shaderProgramLight;
@@ -105,7 +106,6 @@ public class Renderer implements GLEventListener, MouseListener,
             gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_LINE);
         }
 
-
 		renderFromLight(gl, shaderProgramLight);
 		renderFromViewer(gl, shaderProgram);
 
@@ -134,11 +134,19 @@ public class Renderer implements GLEventListener, MouseListener,
         //texture
         texture2D.bind(shaderProgramLight,"textureSampler", 0);
 
-        gl.glUniform1i(locMode,1);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
-
         gl.glUniform1i(locMode,0);
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+
+        switch (functions %3){
+            case 1:
+                gl.glUniform1i(locMode,1);
+                buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+                break;
+            case 2:
+                gl.glUniform1i(locMode,2);
+                buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+                break;
+        }
     }
 
     private void renderFromViewer(GL2GL3 gl, int shaderProgram){
@@ -162,10 +170,19 @@ public class Renderer implements GLEventListener, MouseListener,
         //texture
         texture2D.bind(shaderProgram,"textureSampler", 0);
 
-        gl.glUniform1i(locMode,1);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
         gl.glUniform1i(locMode,0);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+
+        switch (functions % 3 ){
+            case 1:
+                gl.glUniform1i(locMode,1);
+                buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+                break;
+            case 2:
+                gl.glUniform1i(locMode,2);
+                buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+                break;
+        }
     }
 
     /**
@@ -245,7 +262,10 @@ public class Renderer implements GLEventListener, MouseListener,
             //P for changing projection (persp, orto)
             case KeyEvent.VK_P:
                 modeOfProjection = !modeOfProjection;
-                System.out.println(modeOfProjection);
+                break;
+            //N for changing functions
+            case KeyEvent.VK_N:
+                functions++;
                 break;
 		}
 	}

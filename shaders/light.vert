@@ -6,7 +6,7 @@ in vec2 inTexture;
 uniform mat4 viewMat;
 uniform mat4 projMat;
 uniform float time;
-uniform int mode; //mode1 - sphere mode0 - face
+uniform int mode;    //plocha je 0, torus je 1, moje1 je 2
 
 out vec3 vertColor;
 out vec2 textCoordinates;
@@ -23,17 +23,33 @@ vec3 getSphere(vec2 xy){
     float r = 1;
 
     float x = cos(azimuth)*cos(zenith)*r;
-    float y = 2*sin(azimuth)*cos(zenith)*r;
-    float z = 0.5*sin(zenith)*r;
-
-/*    float x = (4/3)^azimuth*sin(zenith)*sin(zenith)*cos(azimuth);
-    float y = (4/3)^azimuth*sin(zenith)*sin(zenith)*sin(azimuth);
-    float z = (4/3)^azimuth*sin(zenith)*cos(zenith);*/
+    float y = sin(azimuth)*cos(zenith)*r;
+    float z = sin(zenith)*r;
 
     return vec3(x, y, z);
 }
 
-//výpočet normál pomocí diferencí
+vec3 getTorus(vec2 xy){
+    float azimuth = xy.x * PI;
+    float zenith = xy.y * PI/2;
+    float r = 1;
+
+    float x = 3*cos(azimuth)+cos(zenith)*cos(azimuth);
+    float y = 3*sin(azimuth)+cos(zenith)*sin(azimuth);
+    float z = sin(zenith);
+
+    return vec3(x, y, z);
+}
+
+
+vec3 getTorusNormal2(vec2 xy){
+    vec3 u = getTorus(xy + vec2(0.001,0)) - getTorus(xy - vec2(0.001,0));
+    vec3 v = getTorus(xy + vec2(0, 0.001)) - getTorus(xy - vec2(0, 0.001));
+    return cross(u,v);
+}
+
+
+//výpočet normál pomocí diference
 vec3 getSphereNormal(vec2 xy){
     vec3 u = getSphere(xy + vec2(0.001,0)) - getSphere(xy - vec2(0.001,0));
     vec3 v = getSphere(xy + vec2(0, 0.001)) - getSphere(xy - vec2(0, 0.001));
@@ -54,19 +70,27 @@ vec3 getSphereNormal2(vec2 xy){
 
 void main() {
     vec2 pos = inPosition*2 - 1;
-    //vec4 pos4 = vec4(pos, functionForZ(pos), 1.0);
     vec4 pos4;
     vec3 normal;
-    if(mode == 1){
-        pos4 = vec4(getSphere(pos), 1.0);
-        normal= getSphereNormal2(pos);
-        //normal= getSphereNormal(pos);
+
+    if(mode == 0){
+        //generuje plochu
+        pos4=vec4(pos*3, 2.0, 1.0);
+        normal=vec3(pos,2.0);
 
         //toto dělá, že se světlo točí s náma
         normal = inverse(transpose(mat3(viewMat))) * normal;
-    }else{
-        pos4=vec4(pos*3, 2.0, 1.0);
-        normal=vec3(pos,2.0);
+    }
+    if(mode == 1){
+        pos4 = vec4(getTorus(pos)/2, 1.0);
+        normal= getTorusNormal2(pos);
+
+        //toto dělá, že se světlo točí s náma
+        normal = inverse(transpose(mat3(viewMat))) * normal;
+    }
+    if(mode == 2){
+        pos4 = vec4(getSphere(pos), 1.0);
+        normal= getSphereNormal2(pos);
 
         //toto dělá, že se světlo točí s náma
         normal = inverse(transpose(mat3(viewMat))) * normal;
