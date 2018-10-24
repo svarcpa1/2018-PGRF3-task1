@@ -56,24 +56,15 @@ public class Renderer implements GLEventListener, MouseListener,
 		OGLUtils.printOGLparameters(gl);
 		
 		textRenderer = new OGLTextRenderer(gl, glDrawable.getSurfaceWidth(), glDrawable.getSurfaceHeight());
-		
-		// shader files are in /shaders/ directory
-		// shaders directory must be set as a source directory of the project
-		// e.g. in Eclipse via main menu Project/Properties/Java Build Path/Source
+
 		shaderProgram = ShaderUtils.loadProgram(gl, "/start.vert",
 				"/start.frag",
 				null,null,null,null);
         shaderProgramLight = ShaderUtils.loadProgram(gl, "/light.vert",
                 "/light.frag",
                 null,null,null,null);
-		
-		//shorter version of loading shader program
-		//shaderProgram = ShaderUtils.loadProgram(gl, "/lvl1basic/p01start/p04utils/start"); 
+
         gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_FILL);
-		//for older GLSL version 
-		//shaderProgram = ShaderUtils.loadProgram(gl, "/lvl1basic/p01start/p04utils/startForOlderGLSL");
-		
-		//createBuffers(gl);
 		buffers= GridFactory.create(gl,50,50);
 
         Vec3D position = new Vec3D(5, 5, 5);
