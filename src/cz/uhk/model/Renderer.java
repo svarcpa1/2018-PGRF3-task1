@@ -134,6 +134,7 @@ public class Renderer implements GLEventListener, MouseListener,
         //texture
         texture2D.bind(shaderProgramLight,"textureSampler", 0);
 
+        //plocha
         gl.glUniform1i(locMode,0);
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
 
@@ -170,6 +171,7 @@ public class Renderer implements GLEventListener, MouseListener,
         //texture
         texture2D.bind(shaderProgram,"textureSampler", 0);
 
+        //plocha
         gl.glUniform1i(locMode,0);
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
 
