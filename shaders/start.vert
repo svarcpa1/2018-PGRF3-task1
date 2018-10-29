@@ -84,31 +84,29 @@ vec3 getElephant(vec2 xy){
 
 // normals counted by diffention
 vec3 getNormalDiff(vec2 xy){
+    vec3 u;
+    vec3 v;
+
     if(mode==1){
         vec3 u = getTorus(xy + vec2(0.001,0)) - getTorus(xy - vec2(0.001,0));
         vec3 v = getTorus(xy + vec2(0, 0.001)) - getTorus(xy - vec2(0, 0.001));
-        return cross(u,v);
-    }if(mode==2){
+    }else if(mode==2){
         vec3 u = getTurbine(xy + vec2(0.001,0)) - getTurbine(xy - vec2(0.001,0));
         vec3 v = getTurbine(xy + vec2(0, 0.001)) - getTurbine(xy - vec2(0, 0.001));
-        return cross(u,v);
-    }if(mode==3){
+    }else if(mode==3){
          vec3 u = getUfo(xy + vec2(0.001,0)) - getUfo(xy - vec2(0.001,0));
          vec3 v = getUfo(xy + vec2(0, 0.001)) - getUfo(xy - vec2(0, 0.001));
-         return cross(u,v);
-    }if(mode==4){
+    }else if(mode==4){
         vec3 u = getGoblet(xy + vec2(0.001,0)) - getGoblet(xy - vec2(0.001,0));
         vec3 v = getGoblet(xy + vec2(0, 0.001)) - getGoblet(xy - vec2(0, 0.001));
-        return cross(u,v);
-    }if(mode==5){
+    }else if(mode==5){
         vec3 u = getElephant(xy + vec2(0.001,0)) - getElephant(xy - vec2(0.001,0));
         vec3 v = getElephant(xy + vec2(0, 0.001)) - getElephant(xy - vec2(0, 0.001));
-        return cross(u,v);
-    }else{
+    }else if(mode==6){
         vec3 u = getSomething(xy + vec2(0.001,0)) - getSomething(xy - vec2(0.001,0));
         vec3 v = getSomething(xy + vec2(0, 0.001)) - getSomething(xy - vec2(0, 0.001));
-        return cross(u,v);
     }
+    return cross(u,v);
 }
 
 //výpočet normál pomocí parciální derivace
