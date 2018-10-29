@@ -17,6 +17,7 @@ float functionForZ(vec2 vec){
     return sin (vec.x * 2 * 3.14 + time);
 }
 
+//mine katrez
 vec3 getTurbine(vec2 xy){
     float azimuth = xy.x * PI;
     float zenith = xy.y * PI/2;
@@ -28,7 +29,7 @@ vec3 getTurbine(vec2 xy){
 
     return vec3(x, y, z);
 }
-
+//kartez
 vec3 getTorus(vec2 xy){
     float azimuth = xy.x * PI;
     float zenith = xy.y * PI/2;
@@ -38,6 +39,40 @@ vec3 getTorus(vec2 xy){
     float z = sin(zenith);
 
     return vec3(x, y, z);
+}
+//mine cylin
+vec3 getUfo(vec2 xy){
+    float s = PI*xy.x;
+	float t = PI*xy.y;
+	return vec3(1+sin(t), t*sin(s),t*cos(s));
+}
+//cylin
+vec3 getGoblet(vec2 xy){
+    float s = xy.x * PI;
+    float t = xy.y * PI;
+
+	float r = 1+sin(t);
+	float theta = s;
+
+	float x = r*cos(theta);
+	float y = r*sin(theta);
+
+	return vec3(x,y,t);
+}
+
+//TODO make it one
+//výpočet normál pomocí diference
+vec3 getUfoNormalDiff(vec2 xy){
+    vec3 u = getUfo(xy + vec2(0.001,0)) - getUfo(xy - vec2(0.001,0));
+    vec3 v = getUfo(xy + vec2(0, 0.001)) - getUfo(xy - vec2(0, 0.001));
+    return cross(u,v);
+}
+
+//výpočet normál pomocí diference
+vec3 getGobletNormalDiff(vec2 xy){
+    vec3 u = getGoblet(xy + vec2(0.001,0)) - getGoblet(xy - vec2(0.001,0));
+    vec3 v = getGoblet(xy + vec2(0, 0.001)) - getGoblet(xy - vec2(0, 0.001));
+    return cross(u,v);
 }
 
 //výpočet normál pomocí diference
@@ -86,6 +121,18 @@ void main() {
     if(mode == 2){
         pos4 = vec4(getTurbine(pos)/2, 1.0);
         normal= getTurbineNormalDiff(pos);
+        //toto dělá, že se světlo točí s náma
+        normal = inverse(transpose(mat3(viewMat))) * normal;
+    }
+    if(mode == 3){
+        pos4 = vec4(getUfo(pos)/2, 1.0);
+        normal= getUfoNormalDiff(pos);
+        //toto dělá, že se světlo točí s náma
+        normal = inverse(transpose(mat3(viewMat))) * normal;
+    }
+    if(mode == 4){
+        pos4 = vec4(getGoblet(pos)/2, 1.0);
+        normal= getGobletNormalDiff(pos);
         //toto dělá, že se světlo točí s náma
         normal = inverse(transpose(mat3(viewMat))) * normal;
     }

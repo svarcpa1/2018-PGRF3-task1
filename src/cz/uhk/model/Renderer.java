@@ -171,13 +171,21 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform1i(locMode,0);
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
 
-        switch (functions % 3 ){
+        switch (functions % 5 ){
             case 1:
                 gl.glUniform1i(locMode,1);
                 buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
                 break;
             case 2:
-                gl.glUniform1i(locMode,2);
+				gl.glUniform1i(locMode,2);
+				buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+				break;
+			case 3:
+				gl.glUniform1i(locMode,3);
+				buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+				break;
+            case 4:
+                gl.glUniform1i(locMode,4);
                 buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
                 break;
         }
