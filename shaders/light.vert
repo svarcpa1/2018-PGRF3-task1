@@ -17,7 +17,7 @@ float functionForZ(vec2 vec){
     return sin (vec.x * 2 * 3.14 + time);
 }
 
-//mine katrez
+//mine kart
 vec3 getTurbine(vec2 xy){
     float azimuth = xy.x * PI;
     float zenith = xy.y * PI/2;
@@ -29,7 +29,7 @@ vec3 getTurbine(vec2 xy){
 
     return vec3(x, y, z);
 }
-//kartez
+//kart
 vec3 getTorus(vec2 xy){
     float azimuth = xy.x * PI;
     float zenith = xy.y * PI/2;
@@ -88,23 +88,23 @@ vec3 getNormalDiff(vec2 xy){
     vec3 v;
 
     if(mode==1){
-        vec3 u = getTorus(xy + vec2(0.001,0)) - getTorus(xy - vec2(0.001,0));
-        vec3 v = getTorus(xy + vec2(0, 0.001)) - getTorus(xy - vec2(0, 0.001));
+        u = getTorus(xy + vec2(0.001,0)) - getTorus(xy - vec2(0.001,0));
+        v = getTorus(xy + vec2(0, 0.001)) - getTorus(xy - vec2(0, 0.001));
     }else if(mode==2){
-        vec3 u = getTurbine(xy + vec2(0.001,0)) - getTurbine(xy - vec2(0.001,0));
-        vec3 v = getTurbine(xy + vec2(0, 0.001)) - getTurbine(xy - vec2(0, 0.001));
+        u = getTurbine(xy + vec2(0.001,0)) - getTurbine(xy - vec2(0.001,0));
+        v = getTurbine(xy + vec2(0, 0.001)) - getTurbine(xy - vec2(0, 0.001));
     }else if(mode==3){
-         vec3 u = getUfo(xy + vec2(0.001,0)) - getUfo(xy - vec2(0.001,0));
-         vec3 v = getUfo(xy + vec2(0, 0.001)) - getUfo(xy - vec2(0, 0.001));
+        u = getUfo(xy + vec2(0.001,0)) - getUfo(xy - vec2(0.001,0));
+        v = getUfo(xy + vec2(0, 0.001)) - getUfo(xy - vec2(0, 0.001));
     }else if(mode==4){
-        vec3 u = getGoblet(xy + vec2(0.001,0)) - getGoblet(xy - vec2(0.001,0));
-        vec3 v = getGoblet(xy + vec2(0, 0.001)) - getGoblet(xy - vec2(0, 0.001));
+        u = getGoblet(xy + vec2(0.001,0)) - getGoblet(xy - vec2(0.001,0));
+        v = getGoblet(xy + vec2(0, 0.001)) - getGoblet(xy - vec2(0, 0.001));
     }else if(mode==5){
-        vec3 u = getElephant(xy + vec2(0.001,0)) - getElephant(xy - vec2(0.001,0));
-        vec3 v = getElephant(xy + vec2(0, 0.001)) - getElephant(xy - vec2(0, 0.001));
+        u = getElephant(xy + vec2(0.001,0)) - getElephant(xy - vec2(0.001,0));
+        v = getElephant(xy + vec2(0, 0.001)) - getElephant(xy - vec2(0, 0.001));
     }else if(mode==6){
-        vec3 u = getSomething(xy + vec2(0.001,0)) - getSomething(xy - vec2(0.001,0));
-        vec3 v = getSomething(xy + vec2(0, 0.001)) - getSomething(xy - vec2(0, 0.001));
+        u = getSomething(xy + vec2(0.001,0)) - getSomething(xy - vec2(0.001,0));
+        v = getSomething(xy + vec2(0, 0.001)) - getSomething(xy - vec2(0, 0.001));
     }
     return cross(u,v);
 }
@@ -126,32 +126,38 @@ void main() {
     vec4 pos4;
     vec3 normal;
 
-    //generuje plochu
+    //generate plain
     pos4=vec4(pos*3, 2.0, 1.0);
     normal=vec3(pos,2.0);
 
     if(mode == 1){
         pos4 = vec4(getTorus(pos)/2, 1.0);
+        pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
     }
     if(mode == 2){
         pos4 = vec4(getTurbine(pos)/2, 1.0);
+        pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
     }
     if(mode == 3){
         pos4 = vec4(getUfo(pos)/2, 1.0);
+        pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
     }
     if(mode == 4){
         pos4 = vec4(getGoblet(pos)/2, 1.0);
+        pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
     }
     if(mode == 5){
-        pos4 = vec4(getElephant(pos)/2, 1.0);
+        pos4 = vec4(getElephant(pos)/4, 1.0);
+        pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
     }
     if(mode == 6){
         pos4 = vec4(getSomething(pos)/2, 1.0);
+        pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
     }
 
@@ -159,11 +165,11 @@ void main() {
     normal = inverse(transpose(mat3(viewMat))) * normal;
 	gl_Position = projMat * viewMat * pos4;
 
-	//vypocet osvetleni
+	//light
 	vec3 lightPos = vec3(5, 5, 1);
 	vec3 light = lightPos-(viewMat*pos4).xyz;
 
-	//vypocet barvy
+	//color
 	vertColor = pos4.xyz;
 	vertColor = vec3(dot(normalize(normal), normalize(light)));
 

@@ -44,7 +44,7 @@ public class GridFactory {
 
         // vertex binding description, concise version
         OGLBuffers.Attrib[] attributes = {
-                new OGLBuffers.Attrib("inPosition", 2), // 2 floats
+                new OGLBuffers.Attrib("inPosition", 2), // 2 floats (x, y)
                 new OGLBuffers.Attrib("inTexture", 2) //x,y to texture
         };
         return new OGLBuffers(gl, vertexBuffer, attributes, indexBuffer);
