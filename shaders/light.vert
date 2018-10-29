@@ -48,45 +48,67 @@ vec3 getUfo(vec2 xy){
 }
 //cylin
 vec3 getGoblet(vec2 xy){
-    float s = xy.x * PI;
+    float theta = xy.x * PI;
     float t = xy.y * PI;
-
 	float r = 1+sin(t);
-	float theta = s;
 
 	float x = r*cos(theta);
 	float y = r*sin(theta);
 
 	return vec3(x,y,t);
 }
+// mine spheric
+vec3 getSomething(vec2 xy){
+    float s = xy.x * PI;
+    float t = xy.y * PI;
+    float r = sin(t-PI);
 
-//TODO make it one
-//výpočet normál pomocí diference
-vec3 getUfoNormalDiff(vec2 xy){
-    vec3 u = getUfo(xy + vec2(0.001,0)) - getUfo(xy - vec2(0.001,0));
-    vec3 v = getUfo(xy + vec2(0, 0.001)) - getUfo(xy - vec2(0, 0.001));
-    return cross(u,v);
+    float x = r*sin(t)*cos(s);
+    float y = r*sin(t)*sin(s);
+    float z = r*cos(t);
+
+    return vec3(x, y, z);
+}
+//spheric
+vec3 getElephant(vec2 xy){
+    float s = xy.x * 1.5* PI;
+    float t = xy.y * PI;
+    float r = 3+cos(4*s);
+
+    float x = r*sin(t)*cos(s);
+    float y = r*sin(t)*sin(s);
+    float z = r*cos(t);
+
+    return vec3(x, y, z);
 }
 
-//výpočet normál pomocí diference
-vec3 getGobletNormalDiff(vec2 xy){
-    vec3 u = getGoblet(xy + vec2(0.001,0)) - getGoblet(xy - vec2(0.001,0));
-    vec3 v = getGoblet(xy + vec2(0, 0.001)) - getGoblet(xy - vec2(0, 0.001));
-    return cross(u,v);
-}
-
-//výpočet normál pomocí diference
-vec3 getTorusNormalDiff(vec2 xy){
-    vec3 u = getTorus(xy + vec2(0.001,0)) - getTorus(xy - vec2(0.001,0));
-    vec3 v = getTorus(xy + vec2(0, 0.001)) - getTorus(xy - vec2(0, 0.001));
-    return cross(u,v);
-}
-
-//výpočet normál pomocí diference
-vec3 getTurbineNormalDiff(vec2 xy){
-    vec3 u = getTurbine(xy + vec2(0.001,0)) - getTurbine(xy - vec2(0.001,0));
-    vec3 v = getTurbine(xy + vec2(0, 0.001)) - getTurbine(xy - vec2(0, 0.001));
-    return cross(u,v);
+// normals counted by diffention
+vec3 getNormalDiff(vec2 xy){
+    if(mode==1){
+        vec3 u = getTorus(xy + vec2(0.001,0)) - getTorus(xy - vec2(0.001,0));
+        vec3 v = getTorus(xy + vec2(0, 0.001)) - getTorus(xy - vec2(0, 0.001));
+        return cross(u,v);
+    }if(mode==2){
+        vec3 u = getTurbine(xy + vec2(0.001,0)) - getTurbine(xy - vec2(0.001,0));
+        vec3 v = getTurbine(xy + vec2(0, 0.001)) - getTurbine(xy - vec2(0, 0.001));
+        return cross(u,v);
+    }if(mode==3){
+         vec3 u = getUfo(xy + vec2(0.001,0)) - getUfo(xy - vec2(0.001,0));
+         vec3 v = getUfo(xy + vec2(0, 0.001)) - getUfo(xy - vec2(0, 0.001));
+         return cross(u,v);
+    }if(mode==4){
+        vec3 u = getGoblet(xy + vec2(0.001,0)) - getGoblet(xy - vec2(0.001,0));
+        vec3 v = getGoblet(xy + vec2(0, 0.001)) - getGoblet(xy - vec2(0, 0.001));
+        return cross(u,v);
+    }if(mode==5){
+        vec3 u = getElephant(xy + vec2(0.001,0)) - getElephant(xy - vec2(0.001,0));
+        vec3 v = getElephant(xy + vec2(0, 0.001)) - getElephant(xy - vec2(0, 0.001));
+        return cross(u,v);
+    }else{
+        vec3 u = getSomething(xy + vec2(0.001,0)) - getSomething(xy - vec2(0.001,0));
+        vec3 v = getSomething(xy + vec2(0, 0.001)) - getSomething(xy - vec2(0, 0.001));
+        return cross(u,v);
+    }
 }
 
 //výpočet normál pomocí parciální derivace
@@ -109,34 +131,34 @@ void main() {
     //generuje plochu
     pos4=vec4(pos*3, 2.0, 1.0);
     normal=vec3(pos,2.0);
-    //toto dělá, že se světlo točí s náma
-    normal = inverse(transpose(mat3(viewMat))) * normal;
 
     if(mode == 1){
         pos4 = vec4(getTorus(pos)/2, 1.0);
-        normal= getTorusNormalDiff(pos);
-        //toto dělá, že se světlo točí s náma
-        normal = inverse(transpose(mat3(viewMat))) * normal;
+        normal= getNormalDiff(pos);
     }
     if(mode == 2){
         pos4 = vec4(getTurbine(pos)/2, 1.0);
-        normal= getTurbineNormalDiff(pos);
-        //toto dělá, že se světlo točí s náma
-        normal = inverse(transpose(mat3(viewMat))) * normal;
+        normal= getNormalDiff(pos);
     }
     if(mode == 3){
         pos4 = vec4(getUfo(pos)/2, 1.0);
-        normal= getUfoNormalDiff(pos);
-        //toto dělá, že se světlo točí s náma
-        normal = inverse(transpose(mat3(viewMat))) * normal;
+        normal= getNormalDiff(pos);
     }
     if(mode == 4){
         pos4 = vec4(getGoblet(pos)/2, 1.0);
-        normal= getGobletNormalDiff(pos);
-        //toto dělá, že se světlo točí s náma
-        normal = inverse(transpose(mat3(viewMat))) * normal;
+        normal= getNormalDiff(pos);
+    }
+    if(mode == 5){
+        pos4 = vec4(getElephant(pos)/2, 1.0);
+        normal= getNormalDiff(pos);
+    }
+    if(mode == 6){
+        pos4 = vec4(getSomething(pos)/2, 1.0);
+        normal= getNormalDiff(pos);
     }
 
+    //this makes that light is with us
+    normal = inverse(transpose(mat3(viewMat))) * normal;
 	gl_Position = projMat * viewMat * pos4;
 
 	//vypocet osvetleni
