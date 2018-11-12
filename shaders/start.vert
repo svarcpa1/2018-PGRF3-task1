@@ -1,15 +1,25 @@
 #version 150
 
-in vec2 inPosition; // input from the vertex buffer
+in vec2 inPosition; //input from the vertex buffer
 in vec2 inTexture;
+in vec2 inTextureDepth;
 
 uniform mat4 viewMat;
 uniform mat4 projMat;
 uniform float time;
-uniform int mode;    //plocha je 0, torus je 1, moje1 je 2
+uniform int modeOfFunction;
+uniform int modeOfLight;
+uniform vec3 eyePosition;
 
 out vec3 vertColor;
 out vec2 textCoordinates;
+out vec4 textCoordinatesDepth;
+out vec3 normal;
+out vec3 light;
+out vec3 position;
+out vec3 viewDirection;
+out vec2 vertInPosition;
+out float distance;
 
 float PI = 3.1415;
 
@@ -18,27 +28,29 @@ float functionForZ(vec2 vec){
 }
 
 //mine kart
-vec3 getTurbine(vec2 xy){
+vec3 getTrampoline(vec2 xy){
     float azimuth = xy.x * PI;
     float zenith = xy.y * PI/2;
     float r = 2 + sin(zenith + azimuth);
 
-    float x = r*cos(zenith)*sin(azimuth);
-    float y = r*sin(zenith)*sin(azimuth);
-    float z = r*cos(azimuth)*0.1*time;
+    float x = sin(zenith)*cos(azimuth);
+    float y = 2*sin(azimuth)*sin(zenith);
+    float z = cos(zenith)*0.1*time;
 
     return vec3(x, y, z);
 }
 //kart
-vec3 getTorus(vec2 xy){
+vec3 getSphere(vec2 xy){
     float azimuth = xy.x * PI;
     float zenith = xy.y * PI/2;
+    float r = 1;
 
-    float x = 3*cos(azimuth)+cos(zenith)*cos(azimuth);
-    float y = 3*sin(azimuth)+cos(zenith)*sin(azimuth);
-    float z = sin(zenith);
+    float x = cos(azimuth)*cos(zenith)*r;
+    float y = sin(azimuth)*cos(zenith)*r;
+    float z = sin(zenith)*r;
 
     return vec3(x, y, z);
+
 }
 //mine cylin
 vec3 getUfo(vec2 xy){
@@ -49,11 +61,11 @@ vec3 getUfo(vec2 xy){
 //cylin
 vec3 getGoblet(vec2 xy){
     float theta = xy.x * PI;
-    float t = xy.y * PI;
+    float t = xy.y * PI *1.5;
 	float r = 1+sin(t);
 
-	float x = r*cos(theta);
-	float y = r*sin(theta);
+	float x = r*cos(theta)*1.5;
+	float y = r*sin(theta)*1.5;
 
 	return vec3(x,y,t);
 }
@@ -71,7 +83,7 @@ vec3 getSomething(vec2 xy){
 }
 //spheric
 vec3 getElephant(vec2 xy){
-    float s = xy.x * 1.5* PI;
+    float s = xy.x * PI;
     float t = xy.y * PI;
     float r = 3+cos(4*s);
 
@@ -82,27 +94,24 @@ vec3 getElephant(vec2 xy){
     return vec3(x, y, z);
 }
 
-// normals counted by diffention
+// normals counted by differention
 vec3 getNormalDiff(vec2 xy){
     vec3 u;
     vec3 v;
 
-    if(mode==1){
-        u = getTorus(xy + vec2(0.001,0)) - getTorus(xy - vec2(0.001,0));
-        v = getTorus(xy + vec2(0, 0.001)) - getTorus(xy - vec2(0, 0.001));
-    }else if(mode==2){
-        u = getTurbine(xy + vec2(0.001,0)) - getTurbine(xy - vec2(0.001,0));
-        v = getTurbine(xy + vec2(0, 0.001)) - getTurbine(xy - vec2(0, 0.001));
-    }else if(mode==3){
+    if(modeOfFunction==2){
+        u = getTrampoline(xy + vec2(0.001,0)) - getTrampoline(xy - vec2(0.001,0));
+        v = getTrampoline(xy + vec2(0, 0.001)) - getTrampoline(xy - vec2(0, 0.001));
+    }else if(modeOfFunction==3){
         u = getUfo(xy + vec2(0.001,0)) - getUfo(xy - vec2(0.001,0));
         v = getUfo(xy + vec2(0, 0.001)) - getUfo(xy - vec2(0, 0.001));
-    }else if(mode==4){
+    }else if(modeOfFunction==4){
         u = getGoblet(xy + vec2(0.001,0)) - getGoblet(xy - vec2(0.001,0));
         v = getGoblet(xy + vec2(0, 0.001)) - getGoblet(xy - vec2(0, 0.001));
-    }else if(mode==5){
+    }else if(modeOfFunction==5){
         u = getElephant(xy + vec2(0.001,0)) - getElephant(xy - vec2(0.001,0));
         v = getElephant(xy + vec2(0, 0.001)) - getElephant(xy - vec2(0, 0.001));
-    }else if(mode==6){
+    }else if(modeOfFunction==6){
         u = getSomething(xy + vec2(0.001,0)) - getSomething(xy - vec2(0.001,0));
         v = getSomething(xy + vec2(0, 0.001)) - getSomething(xy - vec2(0, 0.001));
     }
@@ -117,7 +126,6 @@ vec3 getSphereNormal(vec2 xy){
 
     vec3 dx = vec3(-sin(az)*cos(ze)*PI, cos(az)*cos(ze)*PI, 0);
     vec3 dy = vec3(cos(az)*-sin(ze)*PI/2, sin(az)*-sin(ze)*PI/2, cos(ze)*PI/2);
-
     return cross(dx,dy);
 }
 
@@ -129,50 +137,80 @@ void main() {
     //generate plain
     pos4=vec4(pos*3, 2.0, 1.0);
     normal=vec3(pos,2.0);
+    normal = inverse(transpose(mat3(viewMat))) * normal;
 
-    if(mode == 1){
-        pos4 = vec4(getTorus(pos)/2, 1.0);
+    if(modeOfFunction == 1){
+        pos4 = vec4(getSphere(pos), 1.0);
+        pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
+        normal= getSphereNormal(pos);
+        normal = inverse(transpose(mat3(viewMat))) * normal;
+        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
+    }
+    if(modeOfFunction == 2){
+        pos4 = vec4(getTrampoline(pos)/2, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
+        normal = inverse(transpose(mat3(viewMat))) * normal;
+        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
-    if(mode == 2){
-        pos4 = vec4(getTurbine(pos)/2, 1.0);
-        pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
-        normal= getNormalDiff(pos);
-    }
-    if(mode == 3){
+    if(modeOfFunction == 3){
         pos4 = vec4(getUfo(pos)/2, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
+        normal = inverse(transpose(mat3(viewMat))) * normal;
+        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
-    if(mode == 4){
+    if(modeOfFunction == 4){
         pos4 = vec4(getGoblet(pos)/2, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
+        normal = inverse(transpose(mat3(viewMat))) * normal;
+        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
-    if(mode == 5){
+    if(modeOfFunction == 5){
         pos4 = vec4(getElephant(pos)/4, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
+        normal = inverse(transpose(mat3(viewMat))) * normal;
+        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
-    if(mode == 6){
-        pos4 = vec4(getSomething(pos)/2, 1.0);
+    if(modeOfFunction == 6){
+        pos4 = vec4(getSomething(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
+        normal = inverse(transpose(mat3(viewMat))) * normal;
+        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
 
-    //this makes that light is with us
-    normal = inverse(transpose(mat3(viewMat))) * normal;
+
+    viewDirection = -pos4.xyz;
 	gl_Position = projMat * viewMat * pos4;
 
 	//light
 	vec3 lightPos = vec3(5, 5, 1);
 	vec3 light = lightPos-(viewMat*pos4).xyz;
 
-	//color
-	vertColor = pos4.xyz;
-	vertColor = vec3(dot(normalize(normal), normalize(light)));
+	//útlum prostredi
+	distance = length(light);
 
-	//textures
-	textCoordinates=inTexture;
+	vec3 eye = normalize(eyePosition - (viewMat*pos4).xyz);
+    vertInPosition = inPosition;
+
+	if(modeOfLight==0){
+        //color
+        vertColor = pos4.xyz;
+        vertColor = vec3(dot(normalize(normal), normalize(light)));
+
+        //textures
+        textCoordinates=inTexture;
+	}else{
+        vertColor = pos4.xyz;
+
+        //textures
+        textCoordinates=inTexture;
+
+        textCoordinatesDepth = vec4(lightPos,1)*projMat * viewMat * pos4;
+        textCoordinatesDepth = vec4(lightPos,1)*pos4;
+        textCoordinatesDepth.xyz= pos4.xyz;//spatne
+	}
 }
