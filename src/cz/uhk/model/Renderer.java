@@ -72,7 +72,7 @@ public class Renderer implements GLEventListener, MouseListener,
                  .withZenith(-Math.PI/5.)
                  .withAzimuth(Math.PI*(5/4.));
 
-        texture2D = new OGLTexture2D(gl, "/textures/stripes.jpg");
+        texture2D = new OGLTexture2D(gl, "/textures/aaa.jpg");
         textureViewer = new OGLTexture2D.Viewer(gl);
 
         renderTarget = new OGLRenderTarget(gl, 256, 256);
@@ -136,8 +136,9 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniformMatrix4fv(locProjMat, 1, false, projMat.floatArray(), 0);
 
         //texture
-        texture2D.bind(shaderProgramLight,"textureSampler", 0);
-        renderTarget.getDepthTexture().bind(shaderProgramLight,"textureSamplerDepth",0);
+        //texture2D.bind(shaderProgramLight,"textureSampler", 1);
+        renderTarget.getDepthTexture().bind(shaderProgramLight,"textureSamplerDepth",1);
+        buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgramLight);
 
         //lightmode
         gl.glUniform1i(locModeOfLight,modeOfLight);
@@ -147,8 +148,8 @@ public class Renderer implements GLEventListener, MouseListener,
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
 
         //plocha
-        gl.glUniform1i(locModeOfFunction,0);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+        //gl.glUniform1i(locModeOfFunction,0);
+        //buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
 
         //eye
         gl.glUniform3fv(locEyePosition,1, ToFloatArray.convert(camera.getPosition()) ,0);
@@ -179,7 +180,8 @@ public class Renderer implements GLEventListener, MouseListener,
 
         //texture
         texture2D.bind(shaderProgram,"textureSampler", 0);
-        renderTarget.getDepthTexture().bind(shaderProgram,"textureSamplerDepth",0);
+        //renderTarget.getDepthTexture().bind(shaderProgram,"textureSamplerDepth",0);
+        buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgram);
 
         //lightmode
         gl.glUniform1i(locModeOfLight,modeOfLight);

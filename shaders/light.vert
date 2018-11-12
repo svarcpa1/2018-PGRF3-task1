@@ -182,6 +182,7 @@ void main() {
 	vertColor = pos4.xyz;
 	vertColor = vec3(dot(normalize(normal), normalize(light)));
 
+
 	//textures
 	textCoordinates=inTexture;
 }
