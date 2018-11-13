@@ -89,23 +89,23 @@ vec3 getNormalDiff(vec2 xy){
     vec3 u;
     vec3 v;
 
-    if(modeOfFunction==2){
-        u = getTrampoline(xy + vec2(0.001,0)) - getTrampoline(xy - vec2(0.001,0));
-        v = getTrampoline(xy + vec2(0, 0.001)) - getTrampoline(xy - vec2(0, 0.001));
-    }else if(modeOfFunction==3){
-        u = getUfo(xy + vec2(0.001,0)) - getUfo(xy - vec2(0.001,0));
-        v = getUfo(xy + vec2(0, 0.001)) - getUfo(xy - vec2(0, 0.001));
-    }else if(modeOfFunction==4){
-        u = getGoblet(xy + vec2(0.001,0)) - getGoblet(xy - vec2(0.001,0));
-        v = getGoblet(xy + vec2(0, 0.001)) - getGoblet(xy - vec2(0, 0.001));
-    }else if(modeOfFunction==5){
-        u = getElephant(xy + vec2(0.001,0)) - getElephant(xy - vec2(0.001,0));
-        v = getElephant(xy + vec2(0, 0.001)) - getElephant(xy - vec2(0, 0.001));
-    }else if(modeOfFunction==6){
-        u = getSomething(xy + vec2(0.001,0)) - getSomething(xy - vec2(0.001,0));
-        v = getSomething(xy + vec2(0, 0.001)) - getSomething(xy - vec2(0, 0.001));
-    }
-    return cross(u,v);
+      if(modeOfFunction==0){
+          u = getTrampoline(xy + vec2(0.001,0)) - getTrampoline(xy - vec2(0.001,0));
+          v = getTrampoline(xy + vec2(0, 0.001)) - getTrampoline(xy - vec2(0, 0.001));
+      }else if(modeOfFunction==1){
+          u = getUfo(xy + vec2(0.001,0)) - getUfo(xy - vec2(0.001,0));
+          v = getUfo(xy + vec2(0, 0.001)) - getUfo(xy - vec2(0, 0.001));
+      }else if(modeOfFunction==2){
+          u = getGoblet(xy + vec2(0.001,0)) - getGoblet(xy - vec2(0.001,0));
+          v = getGoblet(xy + vec2(0, 0.001)) - getGoblet(xy - vec2(0, 0.001));
+      }else if(modeOfFunction==3){
+          u = getElephant(xy + vec2(0.001,0)) - getElephant(xy - vec2(0.001,0));
+          v = getElephant(xy + vec2(0, 0.001)) - getElephant(xy - vec2(0, 0.001));
+      }else if(modeOfFunction==4){
+          u = getSomething(xy + vec2(0.001,0)) - getSomething(xy - vec2(0.001,0));
+          v = getSomething(xy + vec2(0, 0.001)) - getSomething(xy - vec2(0, 0.001));
+      }
+      return cross(u,v);
 }
 
 //výpočet normál pomocí parciální derivace
@@ -124,47 +124,49 @@ void main() {
     vec4 pos4;
     vec3 normal;
 
-    //generate plain
-    pos4=vec4(pos*3, 2.0, 1.0);
-    normal=vec3(pos,2.0);
-    normal = inverse(transpose(mat3(viewMat))) * normal;
-
-    if(modeOfFunction == 1){
-        pos4 = vec4(getSphere(pos), 1.0);
-        pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
+   //generate still plain
+    if(modeOfFunction == 11){
+        pos4=vec4(pos*3, 2.0, 1.0);
+        normal=vec3(pos,2.0);
+        normal = inverse(transpose(mat3(viewMat))) * normal;
+    }
+    //generate "still" sphere
+    if(modeOfFunction == 10){
+        pos4 = vec4(getSphere(pos)/3, 1.0);
+        pos4 = vec4(pos4.x+1.8, pos4.y+ time/10, (pos4.z+3), pos4.w);
         normal= getSphereNormal(pos);
         normal = inverse(transpose(mat3(viewMat))) * normal;
         //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
-    if(modeOfFunction == 2){
-        pos4 = vec4(getTrampoline(pos)/2, 1.0);
+    if(modeOfFunction == 0){
+        pos4 = vec4(getTrampoline(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
         normal = inverse(transpose(mat3(viewMat))) * normal;
         //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
-    if(modeOfFunction == 3){
+    if(modeOfFunction == 1){
         pos4 = vec4(getUfo(pos)/2, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
         normal = inverse(transpose(mat3(viewMat))) * normal;
         //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
-    if(modeOfFunction == 4){
+    if(modeOfFunction == 2){
         pos4 = vec4(getGoblet(pos)/2, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
         normal = inverse(transpose(mat3(viewMat))) * normal;
         //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
-    if(modeOfFunction == 5){
+    if(modeOfFunction == 3){
         pos4 = vec4(getElephant(pos)/4, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
         normal = inverse(transpose(mat3(viewMat))) * normal;
         //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
-    if(modeOfFunction == 6){
+    if(modeOfFunction == 4){
         pos4 = vec4(getSomething(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
@@ -177,6 +179,9 @@ void main() {
 	//light
 	vec3 lightPos = vec3(5, 5, 1);
 	vec3 light = lightPos-(viewMat*pos4).xyz;
+
+    //attenuation
+    //distance = length(light);
 
 	//color
 	vertColor = pos4.xyz;

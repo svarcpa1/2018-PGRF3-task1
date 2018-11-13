@@ -8,7 +8,7 @@ public class GridFactory {
     public static OGLBuffers create(GL2GL3 gl,int m, int n){
         //VB = m*n*2 => every vertex has two coordinates
         //*2 for texture
-        float[] vertexBuffer = new float[2*2*m*n];
+        float[] vertexBuffer = new float[2*2*2*m*n];
         int index=0;
 
         //filling VB with values

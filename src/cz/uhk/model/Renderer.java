@@ -25,8 +25,8 @@ public class Renderer implements GLEventListener, MouseListener,
 
 	private int width, height, ox, oy;
 	private boolean modeOfRendering = true, modeOfProjection = true;
-    private int locTime, locViewMat, locProjMat, locModeOfFunction, locModeOfLight, locEyePosition;
-    private int functions=1, modeOfLight = 0;
+    private int locTime, locViewMat, locProjMat, locModeOfFunction, locModeOfLight, locEyePosition, locModeOfSurface;
+    private int functions=0, modeOfLight = 0, modeOfSurface = 0;
     private float time = 0.5f;
     private float tmp = 1f;
 
@@ -78,7 +78,7 @@ public class Renderer implements GLEventListener, MouseListener,
         renderTarget = new OGLRenderTarget(gl, 256, 256);
 
         gl.glEnable(GL.GL_DEPTH_TEST);
-
+        //culling back faces
         gl.glCullFace(GL.GL_BACK);
         gl.glEnable(GL.GL_CULL_FACE);
 	}
@@ -91,22 +91,26 @@ public class Renderer implements GLEventListener, MouseListener,
 	public void display(GLAutoDrawable glDrawable) {
 		GL2GL3 gl = glDrawable.getGL().getGL2GL3();
 
+		//choosing persp/ortho
 		if(modeOfProjection){
 			projMat = new Mat4PerspRH(Math.PI / 4, height / (double) width, 1, 100.0);
 		}else {
 			projMat = new Mat4OrthoRH(Math.PI / 4, height / (double) width, 1, 100.0);
 		}
 
-        if(modeOfRendering){
+        //choosing line/fill
+		if(modeOfRendering){
             gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_FILL);
         }else {
             gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_LINE);
         }
 
-		renderFromLight(gl, shaderProgramLight);
+		//call render methods
+        renderFromLight(gl, shaderProgramLight);
 		renderFromViewer(gl, shaderProgram);
 
-        gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_FILL);
+        //sides windows
+		gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_FILL);
 		textureViewer.view(texture2D,-1,-1,0.5 );
         textureViewer.view(renderTarget.getColorTexture(), -1, -0.5, 0.5);
         textureViewer.view(renderTarget.getDepthTexture(), -1, 0, 0.5);
@@ -115,7 +119,6 @@ public class Renderer implements GLEventListener, MouseListener,
     private void renderFromLight(GL2GL3 gl, int shaderProgramLight){
         gl.glUseProgram(shaderProgramLight);
         renderTarget.bind();
-
 
         gl.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
@@ -126,6 +129,7 @@ public class Renderer implements GLEventListener, MouseListener,
         locModeOfFunction = gl.glGetUniformLocation(shaderProgramLight, "modeOfFunction");
         locModeOfLight = gl.glGetUniformLocation(shaderProgramLight, "modeOfLight");
         locEyePosition = gl.glGetUniformLocation(shaderProgramLight, "eyePosition");
+        locModeOfSurface = gl.glGetUniformLocation(shaderProgramLight,"modeOfSurface");
 
         time = time + tmp;
         if(time >= 100.0f) tmp = -1f;
@@ -136,20 +140,25 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniformMatrix4fv(locProjMat, 1, false, projMat.floatArray(), 0);
 
         //texture
-        //texture2D.bind(shaderProgramLight,"textureSampler", 1);
+        texture2D.bind(shaderProgramLight,"textureSampler", 1);
         //renderTarget.getDepthTexture().bind(shaderProgramLight,"textureSamplerDepth",1);
         //buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgramLight);
 
         //lightmode
         gl.glUniform1i(locModeOfLight,modeOfLight);
+        //choosing surface
+        gl.glUniform1i(locModeOfSurface,modeOfSurface);
 
         //functions
         functionSelecting(gl);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
 
-        //plocha
-        //gl.glUniform1i(locModeOfFunction,0);
-        //buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+        //still sphere
+        gl.glUniform1i(locModeOfFunction,10);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        //still plain
+        //gl.glUniform1i(locModeOfFunction,11);
+        //buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
 
         //eye
         gl.glUniform3fv(locEyePosition,1, ToFloatArray.convert(camera.getPosition()) ,0);
@@ -168,7 +177,8 @@ public class Renderer implements GLEventListener, MouseListener,
         locTime = gl.glGetUniformLocation(shaderProgram, "time");
         locModeOfFunction = gl.glGetUniformLocation(shaderProgram, "modeOfFunction");
         locModeOfLight = gl.glGetUniformLocation(shaderProgram, "modeOfLight");
-        locEyePosition = gl.glGetUniformLocation(shaderProgramLight, "eyePosition");
+        locEyePosition = gl.glGetUniformLocation(shaderProgram, "eyePosition");
+        locModeOfSurface = gl.glGetUniformLocation(shaderProgram,"modeOfSurface");
 
         time = time + tmp;
         if(time >= 100.0f) tmp = -1f;
@@ -186,12 +196,18 @@ public class Renderer implements GLEventListener, MouseListener,
         //lightmode
         gl.glUniform1i(locModeOfLight,modeOfLight);
 
+        //choosing surface
+        gl.glUniform1i(locModeOfSurface,modeOfSurface);
+
         //functions
         functionSelecting(gl);
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
 
-        //plocha
-        gl.glUniform1i(locModeOfFunction,0);
+        //still sphere
+        gl.glUniform1i(locModeOfFunction,10);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        //still plain
+        gl.glUniform1i(locModeOfFunction,11);
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
 
         //eye
@@ -199,9 +215,9 @@ public class Renderer implements GLEventListener, MouseListener,
     }
 
     private void functionSelecting(GL2GL3 gl){
-        switch ((functions)% 7 ){
+        switch (functions% 5 ){
             case 0:
-                functions=1;
+                gl.glUniform1i(locModeOfFunction,0);
                 break;
             case 1:
                 gl.glUniform1i(locModeOfFunction,1);
@@ -214,12 +230,6 @@ public class Renderer implements GLEventListener, MouseListener,
 				break;
             case 4:
                 gl.glUniform1i(locModeOfFunction,4);
-                break;
-            case 5:
-                gl.glUniform1i(locModeOfFunction,5);
-                break;
-            case 6:
-                gl.glUniform1i(locModeOfFunction,6);
                 break;
         }
     }
@@ -306,10 +316,15 @@ public class Renderer implements GLEventListener, MouseListener,
             case KeyEvent.VK_N:
                 functions++;
                 break;
-            //B for changing light (true = per vertex, false = per pixel)
+            //B for changing light (0 per vertex, i per pixel)
             case KeyEvent.VK_B:
                 modeOfLight=(modeOfLight+1)%2;
                 System.out.println(modeOfLight);
+                break;
+            //V for changing surface (0 color, 1 texture, 2 normals)
+            case KeyEvent.VK_V:
+                modeOfSurface=(modeOfSurface+1)%3;
+                System.out.println(modeOfSurface);
                 break;
 		}
 	}
