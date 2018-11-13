@@ -28,7 +28,7 @@ void main() {
         vec3 nd = normalize( normal );
         vec3 vd = normalize( viewDirection );
 
-        vec4 ambient = vec4(0.1,0.1,0.1,1);
+        vec4 ambient = vec4(0.5,0.5,0.5,1);
         vec4 diffuse = vec4(0.1,0.1,0.1,1);
         vec4 specular = vec4(0.8,0.8,0.8,1);
         vec4 totalAmbient = ambient * vec4(vertColor,1);
@@ -36,7 +36,7 @@ void main() {
         vec4 totalSpecular = vec4(0.0);
 
         //útlum
-        float att=1.0/(1.0 + 0 * distance + 0 * distance * distance);
+        float att=1.0/(0.5 + 0 * distance + 0 * distance * distance);
         float NDotL = max(dot( nd, ld), 0.0 );
 
         vec3 halfVector = normalize( ld + vd);
@@ -47,15 +47,18 @@ void main() {
 
         outColor = totalAmbient + att*(totalDiffuse + totalSpecular);
 
-        float z1=texture(textureSamplerDepth, textCoordinatesDepth.xy/textCoordinatesDepth.w).r;
-        float z2=textCoordinatesDepth.z/textCoordinatesDepth.w;
+        float z1=texture(textureSamplerDepth, textCoordinatesDepth.xy).z;
+        float z2=textCoordinatesDepth.z;
+
+        //float z1=texture(textureSamplerDepth, textCoordinatesDepth.xy/textCoordinatesDepth.w).r;
+        //float z2=textCoordinatesDepth.z/textCoordinatesDepth.w;
 
         bool shadow = z1 < z2 - 0.1;
         if(shadow){
             outColor=texture2D(textureSampler, textCoordinates)* totalAmbient;
-
         }else{
             outColor= texture2D(textureSampler, textCoordinates)*outColor;
+
         }
     }
 } 

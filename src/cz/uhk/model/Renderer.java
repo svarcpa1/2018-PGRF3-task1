@@ -26,7 +26,7 @@ public class Renderer implements GLEventListener, MouseListener,
 	private int width, height, ox, oy;
 	private boolean modeOfRendering = true, modeOfProjection = true;
     private int locTime, locViewMat, locProjMat, locModeOfFunction, locModeOfLight, locEyePosition;
-    private int functions, modeOfLight = 0;
+    private int functions=1, modeOfLight = 0;
     private float time = 0.5f;
     private float tmp = 1f;
 
@@ -72,15 +72,15 @@ public class Renderer implements GLEventListener, MouseListener,
                  .withZenith(-Math.PI/5.)
                  .withAzimuth(Math.PI*(5/4.));
 
-        texture2D = new OGLTexture2D(gl, "/textures/aaa.jpg");
+        texture2D = new OGLTexture2D(gl, "/textures/stripes.jpg");
         textureViewer = new OGLTexture2D.Viewer(gl);
 
         renderTarget = new OGLRenderTarget(gl, 256, 256);
 
         gl.glEnable(GL.GL_DEPTH_TEST);
 
-        //gl.glCullFace(GL.GL_BACK);
-        //gl.glEnable(GL.GL_CULL_FACE);
+        gl.glCullFace(GL.GL_BACK);
+        gl.glEnable(GL.GL_CULL_FACE);
 	}
 
     /**
@@ -137,8 +137,8 @@ public class Renderer implements GLEventListener, MouseListener,
 
         //texture
         //texture2D.bind(shaderProgramLight,"textureSampler", 1);
-        renderTarget.getDepthTexture().bind(shaderProgramLight,"textureSamplerDepth",1);
-        buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgramLight);
+        //renderTarget.getDepthTexture().bind(shaderProgramLight,"textureSamplerDepth",1);
+        //buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgramLight);
 
         //lightmode
         gl.glUniform1i(locModeOfLight,modeOfLight);
@@ -179,9 +179,9 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniformMatrix4fv(locProjMat, 1, false, projMat.floatArray(), 0);
 
         //texture
-        texture2D.bind(shaderProgram,"textureSampler", 0);
-        //renderTarget.getDepthTexture().bind(shaderProgram,"textureSamplerDepth",0);
-        buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgram);
+        //texture2D.bind(shaderProgram,"textureSampler", 0);
+        renderTarget.getDepthTexture().bind(shaderProgram,"textureSamplerDepth",0);
+        //buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgram);
 
         //lightmode
         gl.glUniform1i(locModeOfLight,modeOfLight);
@@ -199,7 +199,10 @@ public class Renderer implements GLEventListener, MouseListener,
     }
 
     private void functionSelecting(GL2GL3 gl){
-        switch (functions % 7 ){
+        switch ((functions)% 7 ){
+            case 0:
+                functions=1;
+                break;
             case 1:
                 gl.glUniform1i(locModeOfFunction,1);
                 break;

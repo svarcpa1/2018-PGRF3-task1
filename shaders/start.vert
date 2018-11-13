@@ -144,42 +144,42 @@ void main() {
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getSphereNormal(pos);
         normal = inverse(transpose(mat3(viewMat))) * normal;
-        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
+        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 2){
         pos4 = vec4(getTrampoline(pos)/2, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
         normal = inverse(transpose(mat3(viewMat))) * normal;
-        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
+        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 3){
         pos4 = vec4(getUfo(pos)/2, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
         normal = inverse(transpose(mat3(viewMat))) * normal;
-        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
+        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 4){
         pos4 = vec4(getGoblet(pos)/2, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
         normal = inverse(transpose(mat3(viewMat))) * normal;
-        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
+        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 5){
         pos4 = vec4(getElephant(pos)/4, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
         normal = inverse(transpose(mat3(viewMat))) * normal;
-        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
+        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 6){
         pos4 = vec4(getSomething(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
         normal = inverse(transpose(mat3(viewMat))) * normal;
-        normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
+        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
 
 
@@ -205,12 +205,13 @@ void main() {
         textCoordinates=inTexture;
 	}else{
         vertColor = pos4.xyz;
+        vertColor = vec3(dot(normalize(normal), normalize(light)));
 
         //textures
         textCoordinates=inTexture;
 
         textCoordinatesDepth = vec4(lightPos,1)*projMat * viewMat * pos4;
-        textCoordinatesDepth = vec4(lightPos,1)*pos4;
-        textCoordinatesDepth.xyz= pos4.xyz;//spatne
+        //textCoordinatesDepth = vec4(lightPos,1)*pos4;
+        textCoordinatesDepth.xyz= pos4.xyz;
 	}
 }
