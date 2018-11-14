@@ -25,19 +25,19 @@ public class Renderer implements GLEventListener, MouseListener,
 
 	private int width, height, ox, oy;
 	private boolean modeOfRendering = true, modeOfProjection = true;
-    private int locTime, locViewMat, locProjMat, locModeOfFunction, locModeOfLight, locEyePosition, locModeOfSurface;
-    private int functions=0, modeOfLight = 0, modeOfSurface = 0;
+    private int locTime, locViewMat, locProjMat, locModeOfFunction, locModeOfLight, locEyePosition, locModeOfSurface,
+                locMVPMatLight;
+    private Vec3D positionLight, directionLight, upLight;
+    private int functions=0, modeOfLight = 0, modeOfSurface = 1;
     private float time = 0.5f;
     private float tmp = 1f;
 
     private int shaderProgram, shaderProgramLight;
 
-    private Mat4 viewMat, projMat;
+    private Mat4 viewMat, projMat, viewMatLight, projMatLight,  depthMatLight, MVPMatLight;
     private Camera camera;
 
 	private OGLBuffers buffers;
-	private OGLTextRenderer textRenderer;
-
 	private OGLTexture2D texture2D;
 	private OGLRenderTarget renderTarget;
 	private OGLTexture2D.Viewer textureViewer;
@@ -50,8 +50,6 @@ public class Renderer implements GLEventListener, MouseListener,
 		OGLUtils.shaderCheck(gl);
 		
 		OGLUtils.printOGLparameters(gl);
-		
-		textRenderer = new OGLTextRenderer(gl, glDrawable.getSurfaceWidth(), glDrawable.getSurfaceHeight());
 
 		shaderProgram = ShaderUtils.loadProgram(gl, "/start.vert",
 				"/start.frag",
@@ -63,10 +61,17 @@ public class Renderer implements GLEventListener, MouseListener,
 		buffers= GridFactory.create(gl,50,50);
 
         Vec3D position = new Vec3D(5, 5, 5);
-        Vec3D direction = new Vec3D(-1, -1, -1);
+        Vec3D direction = new Vec3D(0, 0, 0);
         Vec3D up = new Vec3D(1, 0, 0);
 
+        positionLight = new Vec3D(5, 0, 8);
+        directionLight = new Vec3D(0, 0, 0).sub(positionLight);
+        upLight = new Vec3D(0, 0, 1);
+        projMatLight = new Mat4OrthoRH(20,20,-20, 200.0);
+
         viewMat = new Mat4ViewRH(position, direction, up);
+        viewMatLight = new Mat4ViewRH(positionLight, directionLight, upLight);
+        MVPMatLight = viewMatLight.mul(projMatLight);
 
         camera = new Camera().withPosition(position)
                  .withZenith(-Math.PI/5.)
@@ -75,7 +80,7 @@ public class Renderer implements GLEventListener, MouseListener,
         texture2D = new OGLTexture2D(gl, "/textures/stripes.jpg");
         textureViewer = new OGLTexture2D.Viewer(gl);
 
-        renderTarget = new OGLRenderTarget(gl, 256, 256);
+        renderTarget = new OGLRenderTarget(gl, 1024, 1024);
 
         gl.glEnable(GL.GL_DEPTH_TEST);
         //culling back faces
@@ -127,41 +132,35 @@ public class Renderer implements GLEventListener, MouseListener,
         locProjMat = gl.glGetUniformLocation(shaderProgramLight, "projMat");
         locTime = gl.glGetUniformLocation(shaderProgramLight, "time");
         locModeOfFunction = gl.glGetUniformLocation(shaderProgramLight, "modeOfFunction");
-        locModeOfLight = gl.glGetUniformLocation(shaderProgramLight, "modeOfLight");
         locEyePosition = gl.glGetUniformLocation(shaderProgramLight, "eyePosition");
         locModeOfSurface = gl.glGetUniformLocation(shaderProgramLight,"modeOfSurface");
+        locMVPMatLight = gl.glGetUniformLocation(shaderProgramLight,"MVPMatLight");
 
         time = time + tmp;
         if(time >= 100.0f) tmp = -1f;
         if(time <= 0.0f) tmp = 1f;
 
+        //for moving shadows with light
+        positionLight = new Vec3D(5, 0+time/3, 8);
+        directionLight = new Vec3D(0, 0, 0).sub(positionLight);
+        upLight = new Vec3D(0, 0, 1);
+        projMatLight = new Mat4OrthoRH(10,10,-20, 200.0);
+        viewMatLight = new Mat4ViewRH(positionLight, directionLight, upLight);
+        MVPMatLight = viewMatLight.mul(projMatLight);
+
         gl.glUniform1f(locTime, time/10); // correct shader must be set before this
-        gl.glUniformMatrix4fv(locViewMat, 1, false, camera.getViewMatrix().floatArray(), 0);
-        gl.glUniformMatrix4fv(locProjMat, 1, false, projMat.floatArray(), 0);
-
-        //texture
-        texture2D.bind(shaderProgramLight,"textureSampler", 1);
-        //renderTarget.getDepthTexture().bind(shaderProgramLight,"textureSamplerDepth",1);
-        //buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgramLight);
-
-        //lightmode
-        gl.glUniform1i(locModeOfLight,modeOfLight);
-        //choosing surface
-        gl.glUniform1i(locModeOfSurface,modeOfSurface);
+        gl.glUniformMatrix4fv(locMVPMatLight, 1, false, MVPMatLight.floatArray(), 0);
 
         //functions
         functionSelecting(gl);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
 
         //still sphere
         gl.glUniform1i(locModeOfFunction,10);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
         //still plain
-        //gl.glUniform1i(locModeOfFunction,11);
-        //buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
-
-        //eye
-        gl.glUniform3fv(locEyePosition,1, ToFloatArray.convert(camera.getPosition()) ,0);
+        gl.glUniform1i(locModeOfFunction,11);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
     }
 
     private void renderFromViewer(GL2GL3 gl, int shaderProgram){
@@ -179,6 +178,7 @@ public class Renderer implements GLEventListener, MouseListener,
         locModeOfLight = gl.glGetUniformLocation(shaderProgram, "modeOfLight");
         locEyePosition = gl.glGetUniformLocation(shaderProgram, "eyePosition");
         locModeOfSurface = gl.glGetUniformLocation(shaderProgram,"modeOfSurface");
+        locMVPMatLight = gl.glGetUniformLocation(shaderProgram,"MVPMatLight");
 
         time = time + tmp;
         if(time >= 100.0f) tmp = -1f;
@@ -188,9 +188,11 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniformMatrix4fv(locViewMat, 1, false, camera.getViewMatrix().floatArray(), 0);
         gl.glUniformMatrix4fv(locProjMat, 1, false, projMat.floatArray(), 0);
 
+        gl.glUniformMatrix4fv(locMVPMatLight,1,false,MVPMatLight.floatArray(),0);
+
         //texture
-        //texture2D.bind(shaderProgram,"textureSampler", 0);
-        renderTarget.getDepthTexture().bind(shaderProgram,"textureSamplerDepth",0);
+        texture2D.bind(shaderProgram,"textureSampler", 0);
+        renderTarget.getDepthTexture().bind(shaderProgram,"textureSamplerDepth",1);
         //buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgram);
 
         //lightmode
@@ -208,6 +210,9 @@ public class Renderer implements GLEventListener, MouseListener,
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
         //still plain
         gl.glUniform1i(locModeOfFunction,11);
+        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        //sun
+        gl.glUniform1i(locModeOfFunction,12);
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
 
         //eye
@@ -252,8 +257,6 @@ public class Renderer implements GLEventListener, MouseListener,
         }else {
             projMat = new Mat4OrthoRH(Math.PI / 4, height / (double) width, 1, 100.0);
         }
-
-		textRenderer.updateSize(width, height);
 	}
 
 	@Override

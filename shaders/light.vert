@@ -3,6 +3,7 @@
 in vec2 inPosition; //input from the vertex buffer
 in vec2 inTexture;
 
+uniform mat4 MVPMatLight;
 uniform mat4 viewMat;
 uniform mat4 projMat;
 uniform float time;
@@ -10,7 +11,7 @@ uniform int modeOfFunction;
 uniform bool modeOfLight;
 
 out vec3 vertColor;
-out vec2 textCoordinates;
+out vec4 vertPos;
 
 float PI = 3.1415;
 
@@ -126,7 +127,7 @@ void main() {
 
    //generate still plain
     if(modeOfFunction == 11){
-        pos4=vec4(pos*3, 2.0, 1.0);
+        pos4=vec4(pos*3, -2.0, 1.0);
         normal=vec3(pos,2.0);
         normal = inverse(transpose(mat3(viewMat))) * normal;
     }
@@ -174,19 +175,10 @@ void main() {
         //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
 
-	gl_Position = projMat * viewMat * pos4;
-
-	//light
-	vec3 lightPos = vec3(5, 5, 1);
-	vec3 light = lightPos-(viewMat*pos4).xyz;
+	gl_Position = MVPMatLight * pos4;
 
     //attenuation
     //distance = length(light);
 
-	//color
-	vertColor = pos4.xyz;
-	vertColor = vec3(dot(normalize(normal), normalize(light)));
-
-	//textures
-	textCoordinates=inTexture;
+	vertPos = pos4;
 }

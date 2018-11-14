@@ -6,6 +6,8 @@ in vec2 inTextureDepth;
 
 uniform mat4 viewMat;
 uniform mat4 projMat;
+
+uniform mat4 MVPMatLight;
 uniform float time;
 uniform int modeOfFunction, modeOfLight, modeOfSurface;
 uniform vec3 eyePosition;
@@ -15,9 +17,7 @@ out vec2 textCoordinates;
 out vec4 textCoordinatesDepth;
 out vec3 normal;
 out vec3 light;
-out vec3 position;
 out vec3 viewDirection;
-out vec2 vertInPosition;
 out float distance;
 
 float PI = 3.1415;
@@ -54,7 +54,12 @@ vec3 getSphere(vec2 xy){
 vec3 getUfo(vec2 xy){
     float s = PI*xy.x;
 	float t = PI*xy.y;
-	return vec3(1+sin(t), t*sin(s),t*cos(s));
+
+	float x = 1+sin(t);
+	float y = t*sin(s);
+	float z = t*cos(s);
+
+	return vec3(x,y,z);
 }
 //cylin
 vec3 getGoblet(vec2 xy){
@@ -65,7 +70,7 @@ vec3 getGoblet(vec2 xy){
 	float x = r*cos(theta)*1.5;
 	float y = r*sin(theta)*1.5;
 
-	return vec3(x,y,t);
+	return vec3(x,y,t)*0.25;
 }
 // mine spheric
 vec3 getSomething(vec2 xy){
@@ -130,82 +135,78 @@ vec3 getSphereNormal(vec2 xy){
 void main() {
     vec2 pos = inPosition*2 - 1;
     vec4 pos4;
-    vec3 normal;
+    normal;
 
     //generate still plain
     if(modeOfFunction == 11){
         pos4=vec4(pos*3, 2.0, 1.0);
         normal=vec3(pos,2.0);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
+        //for moving light with us
+        //normal = inverse(transpose(mat3(viewMat))) * normal;
     }
     //generate "still" sphere
     if(modeOfFunction == 10){
         pos4 = vec4(getSphere(pos)/3, 1.0);
-        pos4 = vec4(pos4.x+1.8, pos4.y+ time/10, (pos4.z+3), pos4.w);
+        pos4 = vec4(pos4.x+1.8, pos4.y+0+time/10, (pos4.z+3), pos4.w);
         normal= getSphereNormal(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
+    }
+    //generate "sun"
+    if(modeOfFunction == 12){
+        pos4 = vec4(getSphere(pos)/8, 1.0);
+        pos4 = vec4(pos4.x+5, pos4.y+time/3, pos4.z+8, pos4.w);
+        normal= getSphereNormal(pos);
     }
     if(modeOfFunction == 0){
         pos4 = vec4(getTrampoline(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 1){
-        pos4 = vec4(getUfo(pos)/2, 1.0);
+        pos4 = vec4(getUfo(pos)/3, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 2){
-        pos4 = vec4(getGoblet(pos)/2, 1.0);
+        pos4 = vec4(getGoblet(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 3){
         pos4 = vec4(getElephant(pos)/4, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 4){
         pos4 = vec4(getSomething(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
 
-    viewDirection = -pos4.xyz;
+    viewDirection = -(viewMat*pos4).xyz;
 	gl_Position = projMat * viewMat * pos4;
 
 	//light
-	vec3 lightPos = vec3(5, 5, 5);
-	vec3 light = lightPos-(viewMat*pos4).xyz;
+	vec3 lightPos = vec3(5, 0+time/3, 8);
+	//this woul be used for moving light with viewer
+	//light = lightPos-(viewMat*pos4).xyz;
+	light = lightPos-(pos4).xyz;
 
 	//attenuation
 	distance = length(light);
 
-	vec3 eye = normalize(eyePosition - (viewMat*pos4).xyz);
-    vertInPosition = inPosition;
-
 	if(modeOfLight==0){
+        //depth texture
+        textCoordinatesDepth = MVPMatLight*pos4;
+
         //color
         if(modeOfSurface==0){
-            vertColor = pos4.xyz;
-            vertColor = vec3(dot(normalize(vec3(0.8,0.1,0.1)), normalize(light)));
+            vertColor = vec3(dot(normalize(normal), normalize(light)))*vec3(0.8,0.1,0.1);
         }
         //texture
         else if(modeOfSurface==1){
             vertColor = pos4.xyz;
             vertColor = vec3(dot(normalize(normal), normalize(light)));
-            //textures
+            //texture
             textCoordinates=inTexture;
         }
         //normal
@@ -214,14 +215,9 @@ void main() {
         }
 
 	}else{
-        vertColor = pos4.xyz;
-        vertColor = vec3(dot(normalize(normal), normalize(light)));
-
         //textures
         textCoordinates=inTexture;
+        textCoordinatesDepth = MVPMatLight*pos4;
 
-        textCoordinatesDepth = vec4(lightPos,1)*projMat * viewMat * pos4;
-        //textCoordinatesDepth = vec4(lightPos,1)*pos4;
-        textCoordinatesDepth.xyz= pos4.xyz;
 	}
 }
