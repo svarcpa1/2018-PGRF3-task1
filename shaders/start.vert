@@ -28,8 +28,8 @@ float functionForZ(vec2 vec){
 
 //mine kart
 vec3 getTrampoline(vec2 xy){
-    float azimuth = xy.x * PI;
-    float zenith = xy.y * PI/2;
+    float zenith = xy.x * PI;
+    float azimuth = xy.y * PI;
     float r = 2 + sin(zenith + azimuth);
 
     float x = sin(zenith)*cos(azimuth);
@@ -40,7 +40,9 @@ vec3 getTrampoline(vec2 xy){
 }
 //kart
 vec3 getSphere(vec2 xy){
+    //0-2pi
     float azimuth = xy.x * PI;
+    //0-pi
     float zenith = xy.y * PI/2;
     float r = 1;
 
@@ -52,25 +54,25 @@ vec3 getSphere(vec2 xy){
 }
 //mine cylin
 vec3 getUfo(vec2 xy){
-    float s = PI*xy.x;
-	float t = PI*xy.y;
+	float s=  PI * 0.5 - PI * xy.x;
+	float t= (PI * 0.5 - PI * xy.y);
 
-	float x = 1+sin(t);
-	float y = t*sin(s);
-	float z = t*cos(s);
+    float theta = t;
+	float r = (1+sin(s)+cos(t))*2;
+	float z =t+3;
 
-	return vec3(x,y,z);
+	return vec3(r*cos(theta), r*sin(theta),z)/2;
 }
 //cylin
 vec3 getGoblet(vec2 xy){
-    float theta = xy.x * PI;
-    float t = xy.y * PI *1.5;
-	float r = 1+sin(t);
+	float s=    PI * 0.5 - PI * xy.x;
+	float t= (PI * 0.5 - PI * xy.y)/1.5;
 
-	float x = r*cos(theta)*1.5;
-	float y = r*sin(theta)*1.5;
+    float theta = s;
+	float r = 1+cos(t);
+	float z =t;
 
-	return vec3(x,y,t)*0.25;
+	return vec3(r*cos(theta), r*sin(theta),z)/2;
 }
 // mine spheric
 vec3 getSomething(vec2 xy){
@@ -94,7 +96,7 @@ vec3 getElephant(vec2 xy){
     float y = r*sin(t)*sin(s);
     float z = r*cos(t);
 
-    return vec3(x, y, z);
+    return vec3(x, y, z)*0.25;
 }
 
 // normals counted by differention
@@ -121,16 +123,16 @@ vec3 getNormalDiff(vec2 xy){
     return cross(u,v);
 }
 
-//výpočet normál pomocí parciální derivace
-vec3 getSphereNormal(vec2 xy){
-    float az = xy.x * PI;
-    float ze = xy.y * PI/2;
-    float r = 1;
+ //výpočet normál pomocí parciální derivace
+ vec3 getSphereNormal(vec2 xy){
+     float az = xy.x * PI;
+     float ze = xy.y * PI/2;
+     float r = 1;
 
-    vec3 dx = vec3(-sin(az)*cos(ze)*PI, cos(az)*cos(ze)*PI, 0);
-    vec3 dy = vec3(cos(az)*-sin(ze)*PI/2, sin(az)*-sin(ze)*PI/2, cos(ze)*PI/2);
-    return cross(dx,dy);
-}
+     vec3 dx = vec3(-sin(az)*cos(ze)*PI, cos(az)*cos(ze)*PI, 0);
+     vec3 dy = vec3(cos(az)*-sin(ze)*PI/2, sin(az)*-sin(ze)*PI/2, cos(ze)*PI/2);
+     return cross(dx,dy);
+ }
 
 void main() {
     vec2 pos = inPosition*2 - 1;
@@ -162,8 +164,8 @@ void main() {
         normal= getNormalDiff(pos);
     }
     if(modeOfFunction == 1){
-        pos4 = vec4(getUfo(pos)/3, 1.0);
-        pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
+        pos4 = vec4(getUfo(pos), 1.0);
+        pos4 = vec4(pos4.xy, pos4.z+ 1, pos4.w);
         normal= getNormalDiff(pos);
     }
     if(modeOfFunction == 2){
@@ -172,7 +174,7 @@ void main() {
         normal= getNormalDiff(pos);
     }
     if(modeOfFunction == 3){
-        pos4 = vec4(getElephant(pos)/4, 1.0);
+        pos4 = vec4(getElephant(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
     }
@@ -186,8 +188,8 @@ void main() {
 	gl_Position = projMat * viewMat * pos4;
 
 	//light
-	vec3 lightPos = vec3(5, 0+time/3, 8);
-	//this woul be used for moving light with viewer
+	vec3 lightPos = vec3(5, 0+time/3, 4);
+	//this would be used for moving light with viewer
 	//light = lightPos-(viewMat*pos4).xyz;
 	light = lightPos-(pos4).xyz;
 
@@ -218,6 +220,5 @@ void main() {
         //textures
         textCoordinates=inTexture;
         textCoordinatesDepth = MVPMatLight*pos4;
-
-	}
+    }
 }

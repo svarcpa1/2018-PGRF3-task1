@@ -45,20 +45,25 @@ vec3 getSphere(vec2 xy){
 }
 //mine cylin
 vec3 getUfo(vec2 xy){
-    float s = PI*xy.x;
-	float t = PI*xy.y;
-	return vec3(1+sin(t), t*sin(s),t*cos(s));
+	float s=  PI * 0.5 - PI * xy.x;
+	float t= (PI * 0.5 - PI * xy.y);
+
+    float theta = t;
+	float r = (1+sin(s)+cos(t))*2;
+	float z =t+3;
+
+	return vec3(r*cos(theta), r*sin(theta),z)/2;
 }
 //cylin
 vec3 getGoblet(vec2 xy){
-    float theta = xy.x * PI;
-    float t = xy.y * PI *1.5;
-	float r = 1+sin(t);
+	float s= PI * 0.5 - PI * xy.x;
+	float t= (PI * 0.5 - PI * xy.y)/1.5;
 
-	float x = r*cos(theta)*1.5;
-	float y = r*sin(theta)*1.5;
+    float theta = s;
+	float r = 1+cos(t);
+	float z =t;
 
-	return vec3(x,y,t);
+	return vec3(r*cos(theta), r*sin(theta),z);
 }
 // mine spheric
 vec3 getSomething(vec2 xy){
@@ -82,7 +87,7 @@ vec3 getElephant(vec2 xy){
     float y = r*sin(t)*sin(s);
     float z = r*cos(t);
 
-    return vec3(x, y, z);
+    return vec3(x, y, z)*0.25;
 }
 
 // normals counted by diffention
@@ -109,7 +114,7 @@ vec3 getNormalDiff(vec2 xy){
       return cross(u,v);
 }
 
-//výpočet normál pomocí parciální derivace
+//normals for sphere counted by parcial differention
 vec3 getSphereNormal(vec2 xy){
     float az = xy.x * PI;
     float ze = xy.y * PI/2;
@@ -129,56 +134,40 @@ void main() {
     if(modeOfFunction == 11){
         pos4=vec4(pos*3, -2.0, 1.0);
         normal=vec3(pos,2.0);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
     }
     //generate "still" sphere
     if(modeOfFunction == 10){
         pos4 = vec4(getSphere(pos)/3, 1.0);
         pos4 = vec4(pos4.x+1.8, pos4.y+ time/10, (pos4.z+3), pos4.w);
         normal= getSphereNormal(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 0){
         pos4 = vec4(getTrampoline(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 1){
         pos4 = vec4(getUfo(pos)/2, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 2){
         pos4 = vec4(getGoblet(pos)/2, 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 3){
-        pos4 = vec4(getElephant(pos)/4, 1.0);
+        pos4 = vec4(getElephant(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
     if(modeOfFunction == 4){
         pos4 = vec4(getSomething(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
-        normal = inverse(transpose(mat3(viewMat))) * normal;
-        //normal = (dot(normal,pos4.xyz) > 0.0) ? normal : -normal;
     }
 
 	gl_Position = MVPMatLight * pos4;
-
-    //attenuation
-    //distance = length(light);
 
 	vertPos = pos4;
 }

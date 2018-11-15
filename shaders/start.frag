@@ -84,7 +84,7 @@ void main() {
         totalDiffuse = diffuse * NDotL * baseColor;
         totalSpecular = specular * (pow(NDotH, 16));
 
-        outColor = totalAmbient + (totalDiffuse + totalSpecular);
+        outColor = (totalAmbient + (totalDiffuse + totalSpecular));
 
         vec3 textCoordinatesDepthTmp;
         textCoordinatesDepthTmp = (textCoordinatesDepth.xyz/textCoordinatesDepth.w + 1.)/2.;
@@ -92,8 +92,10 @@ void main() {
         //if(shadow)...
         if (texture(textureSamplerDepth, textCoordinatesDepthTmp.xy).z < textCoordinatesDepthTmp.z-0.0005){
             outColor=texture(textureSampler, textCoordinates)*totalAmbient;
+            //outColor=outColor*totalAmbient;
         }else{
             outColor=texture(textureSampler, textCoordinates)*outColor;
+            //outColor = outColor*vec4(0.2,0.2,0.6,1);
         }
     }
 } 
