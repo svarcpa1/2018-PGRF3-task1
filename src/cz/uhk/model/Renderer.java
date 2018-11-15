@@ -26,7 +26,7 @@ public class Renderer implements GLEventListener, MouseListener,
 	private int width, height, ox, oy;
 	private boolean modeOfRendering = true, modeOfProjection = true;
     private int locTime, locViewMat, locProjMat, locModeOfFunction, locModeOfLight, locEyePosition, locModeOfSurface,
-                locMVPMatLight;
+                locMVPMatLight, locSpotCutOff, locSpotDirection;
     private Vec3D positionLight, directionLight, upLight;
     private int functions=0, modeOfLight = 0, modeOfSurface = 1;
     private float time = 0.5f;
@@ -179,6 +179,9 @@ public class Renderer implements GLEventListener, MouseListener,
         locEyePosition = gl.glGetUniformLocation(shaderProgram, "eyePosition");
         locModeOfSurface = gl.glGetUniformLocation(shaderProgram,"modeOfSurface");
         locMVPMatLight = gl.glGetUniformLocation(shaderProgram,"MVPMatLight");
+        locSpotCutOff = gl.glGetUniformLocation(shaderProgram,"spotOff");
+        locSpotDirection = gl.glGetUniformLocation(shaderProgram,"spotDirection");
+
 
         time = time + tmp;
         if(time >= 100.0f) tmp = -1f;
@@ -194,6 +197,9 @@ public class Renderer implements GLEventListener, MouseListener,
         texture2D.bind(shaderProgram,"textureSampler", 0);
         renderTarget.getDepthTexture().bind(shaderProgram,"textureSamplerDepth",1);
         //buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgram);
+
+        //reflector
+        gl.glUniform1f(locSpotCutOff,2.0f);
 
         //lightmode
         gl.glUniform1i(locModeOfLight,modeOfLight);

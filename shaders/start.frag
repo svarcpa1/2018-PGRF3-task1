@@ -11,13 +11,14 @@ in float distance;
 uniform sampler2D textureSampler;
 uniform sampler2D textureSamplerDepth;
 uniform int modeOfLight, modeOfSurface;
+//reflector
+uniform float spotCutOff;
+//uniform vec3 spotDirection;
+uniform float time;
 
 out vec4 outColor; // output from the fragment shader
 
 void main() {
-
-    //handeling acne
-    //float bias = 0.005 * tan(acos(dot(normal,light)));
 
     //vec4 baseColor = texture(textureSampler,textCoordinates);
     vec4 baseColor = texture(textureSampler, textCoordinates);
@@ -84,14 +85,28 @@ void main() {
         totalDiffuse = diffuse * NDotL * baseColor;
         totalSpecular = specular * (pow(NDotH, 16));
 
-        outColor = (totalAmbient + (totalDiffuse + totalSpecular));
+
+
+        vec3 dir = vec3(0,0,0);
+        float spotEffect = max(dot(normalize(light-vec3(5,0+time/3,8)),normalize(-ld)),0);
+        float blend = clamp((spotEffect-spotCutOff)/(1-spotCutOff) ,0.0,1.0);
+
+        if(spotEffect>spotCutOff){
+            //outColor = (totalAmbient + (totalDiffuse + totalSpecular));
+            outColor = mix(totalAmbient,vec4(1,0,0,1),blend);
+        }else{
+            outColor=vec4(1,1,1,1);
+        }
+
+
+
 
         vec3 textCoordinatesDepthTmp;
         textCoordinatesDepthTmp = (textCoordinatesDepth.xyz/textCoordinatesDepth.w + 1.)/2.;
-
         //if(shadow)...
-        if (texture(textureSamplerDepth, textCoordinatesDepthTmp.xy).z < textCoordinatesDepthTmp.z-0.0005){
+        if ((texture(textureSamplerDepth, textCoordinatesDepthTmp.xy).z < textCoordinatesDepthTmp.z-0.0005)){
             outColor=texture(textureSampler, textCoordinates)*totalAmbient;
+            //outColor=vec4(1,1,1,1);
             //outColor=outColor*totalAmbient;
         }else{
             outColor=texture(textureSampler, textCoordinates)*outColor;

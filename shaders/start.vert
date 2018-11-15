@@ -6,7 +6,6 @@ in vec2 inTextureDepth;
 
 uniform mat4 viewMat;
 uniform mat4 projMat;
-
 uniform mat4 MVPMatLight;
 uniform float time;
 uniform int modeOfFunction, modeOfLight, modeOfSurface;
