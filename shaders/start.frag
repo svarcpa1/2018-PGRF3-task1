@@ -67,7 +67,7 @@ void main() {
 
         vec4 ambient = vec4(0.3,0.3,0.3,1);
         vec4 diffuse = vec4(0.5,0.5,0.5,1);
-        vec4 specular = vec4(0.8,0.8,0.8,1);
+        vec4 specular = vec4(0.9,0.9,0.9,1);
         vec4 totalAmbient = ambient * baseColor;
         vec4 totalDiffuse = vec4(0.0);
         vec4 totalSpecular = vec4(0.0);
@@ -90,12 +90,12 @@ void main() {
 
             if(spotEffect>spotCutOff){
                 //outColor = (totalAmbient + (totalDiffuse + totalSpecular));
-                outColor = mix(totalAmbient,(totalAmbient + (totalDiffuse + totalSpecular)),blend);
+                outColor = mix(totalAmbient,(totalAmbient + att*(totalDiffuse + totalSpecular)),blend);
             }else{
                 outColor=totalAmbient;
             }
         }else{
-            outColor = (totalAmbient + (totalDiffuse + totalSpecular));
+            outColor = (totalAmbient + att*(totalDiffuse + totalSpecular));
         }
 
         vec3 textCoordinatesDepthTmp;

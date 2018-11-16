@@ -213,6 +213,7 @@ void main() {
         //normal
         else{
             vertColor = vec3(dot(normalize(normal), normalize(light)));
+            vertColor = vertColor * normalize(normal);
         }
 
 	}else{
