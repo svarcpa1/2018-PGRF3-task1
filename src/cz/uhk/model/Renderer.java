@@ -26,9 +26,9 @@ public class Renderer implements GLEventListener, MouseListener,
 	private int width, height, ox, oy;
 	private boolean modeOfRendering = true, modeOfProjection = true;
     private int locTime, locViewMat, locProjMat, locModeOfFunction, locModeOfLight, locEyePosition, locModeOfSurface,
-                locMVPMatLight, locSpotCutOff, locSpotDirection;
+                locMVPMatLight, locSpotCutOff, locModeOfLightSource;
     private Vec3D positionLight, directionLight, upLight;
-    private int functions=0, modeOfLight = 0, modeOfSurface = 1;
+    private int functions=0, modeOfLight = 0, modeOfSurface = 1, modeOfLightSource=0;
     private float time = 0.5f;
     private float tmp = 1f;
 
@@ -180,7 +180,7 @@ public class Renderer implements GLEventListener, MouseListener,
         locModeOfSurface = gl.glGetUniformLocation(shaderProgram,"modeOfSurface");
         locMVPMatLight = gl.glGetUniformLocation(shaderProgram,"MVPMatLight");
         locSpotCutOff = gl.glGetUniformLocation(shaderProgram,"spotOff");
-        locSpotDirection = gl.glGetUniformLocation(shaderProgram,"spotDirection");
+        locModeOfLightSource = gl.glGetUniformLocation(shaderProgram,"modeOfLightSource");
 
 
         time = time + tmp;
@@ -199,10 +199,11 @@ public class Renderer implements GLEventListener, MouseListener,
         //buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgram);
 
         //reflector
-        gl.glUniform1f(locSpotCutOff,2.0f);
+        gl.glUniform1f(locSpotCutOff,10.0f);
 
         //lightmode
         gl.glUniform1i(locModeOfLight,modeOfLight);
+        gl.glUniform1i(locModeOfLightSource,modeOfLightSource);
 
         //choosing surface
         gl.glUniform1i(locModeOfSurface,modeOfSurface);
@@ -334,6 +335,11 @@ public class Renderer implements GLEventListener, MouseListener,
             case KeyEvent.VK_V:
                 modeOfSurface=(modeOfSurface+1)%3;
                 System.out.println(modeOfSurface);
+                break;
+            //C for changing light mode (reflector or not)
+            case KeyEvent.VK_C:
+                modeOfLightSource=(modeOfLightSource+1)%2;
+                System.out.println(modeOfLightSource);
                 break;
 		}
 	}

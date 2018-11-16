@@ -10,10 +10,9 @@ in float distance;
 
 uniform sampler2D textureSampler;
 uniform sampler2D textureSamplerDepth;
-uniform int modeOfLight, modeOfSurface;
+uniform int modeOfLight, modeOfSurface, modeOfLightSource;
 //reflector
 uniform float spotCutOff;
-//uniform vec3 spotDirection;
 uniform float time;
 
 out vec4 outColor; // output from the fragment shader
@@ -85,21 +84,19 @@ void main() {
         totalDiffuse = diffuse * NDotL * baseColor;
         totalSpecular = specular * (pow(NDotH, 16));
 
+        if(modeOfLightSource==1){
+            float spotEffect = max(dot(normalize(light-vec3(5,0+time/3,8)),normalize(-ld)),0);
+            float blend = clamp((spotEffect-spotCutOff)/(1-spotCutOff) ,0.0,1.0);
 
-
-        vec3 dir = vec3(0,0,0);
-        float spotEffect = max(dot(normalize(light-vec3(5,0+time/3,8)),normalize(-ld)),0);
-        float blend = clamp((spotEffect-spotCutOff)/(1-spotCutOff) ,0.0,1.0);
-
-        if(spotEffect>spotCutOff){
-            //outColor = (totalAmbient + (totalDiffuse + totalSpecular));
-            outColor = mix(totalAmbient,vec4(1,0,0,1),blend);
+            if(spotEffect>spotCutOff){
+                //outColor = (totalAmbient + (totalDiffuse + totalSpecular));
+                outColor = mix(totalAmbient,(totalAmbient + (totalDiffuse + totalSpecular)),blend);
+            }else{
+                outColor=totalAmbient;
+            }
         }else{
-            outColor=vec4(1,1,1,1);
+            outColor = (totalAmbient + (totalDiffuse + totalSpecular));
         }
-
-
-
 
         vec3 textCoordinatesDepthTmp;
         textCoordinatesDepthTmp = (textCoordinatesDepth.xyz/textCoordinatesDepth.w + 1.)/2.;
