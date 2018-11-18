@@ -5,42 +5,69 @@ import oglutils.OGLBuffers;
 
 public class GridFactory {
 
-    public static OGLBuffers create(GL2GL3 gl,int m, int n){
-        //VB = m*n*2 => every vertex has two coordinates
+    public static OGLBuffers create(GL2GL3 gl,int rows, int cols){
+        //VB = rows*cols*2 => every vertex has two coordinates
         //*2 for texture
-        float[] vertexBuffer = new float[2*2*2*m*n];
+        float[] vertexBuffer = new float[2*2*rows*cols];
         int index=0;
 
         //filling VB with values
-        //i/(m-1)
-        if(m<=1 || n<=1) throw new RuntimeException("n or m <´1");
+        //i/(rows-1)
+        if(rows<=1 || cols<=1) throw new RuntimeException("cols or rows <´1");
 
-        for(int j = 0; j<n; j++){
-            for(int i = 0; i<m; i++){
-                vertexBuffer[index++]=((float)i/(m-1));
-                vertexBuffer[index++]=((float)j/(n-1));
+        for(int j = 0; j<cols; j++){
+            for(int i = 0; i<rows; i++){
+                vertexBuffer[index++]=((float)i/(rows-1));
+                vertexBuffer[index++]=((float)j/(cols-1));
 
                 //for textures
-                vertexBuffer[index++]=((float)i/(m-1));
-                vertexBuffer[index++]=((float)j/(n-1));
+                vertexBuffer[index++]=((float)i/(rows-1));
+                vertexBuffer[index++]=((float)j/(cols-1));
             }
         }
 
         //IB = (M-1)*(N-1)*2*3
-        int[] indexBuffer = new int[(m-1)*(n-1)*2*3];
+        int[] indexBuffer = new int[(rows-1)*(cols-1)*2*3];
         int index2=0;
 
-        for (int i =0; i<n-1; i++){
-            for(int j=0; j<m-1; j++){
-                indexBuffer[index2++] = (j+(i*m));
-                indexBuffer[index2++] = (j+1+(i*m));
-                indexBuffer[index2++] = (j+m+(i*m));
+        //triangles
+        for (int i =0; i<cols-1; i++){
+            for(int j=0; j<rows-1; j++){
+                indexBuffer[index2++] = (j+(i*rows));
+                indexBuffer[index2++] = (j+1+(i*rows));
+                indexBuffer[index2++] = (j+rows+(i*rows));
 
-                indexBuffer[index2++] = (j+1+(i*m));
-                indexBuffer[index2++] = (j+1+m+(i*m));
-                indexBuffer[index2++] = (j+m+(i*m));
+                indexBuffer[index2++] = (j+1+(i*rows));
+                indexBuffer[index2++] = (j+1+rows+(i*rows));
+                indexBuffer[index2++] = (j+rows+(i*rows));
             }
         }
+
+       /* //trinagle strip
+        for(int i = 0; i <= rows-1; i++){
+            for(int j =0; j <= cols; j++){
+                //controlling if the row is even
+                if(i%2 != 0){
+                    //if last one
+                    if(j == cols){
+                        indexBuffer[index2 ++] = cols-j+(i+1)*cols;
+                        indexBuffer[index2 ++] = cols-j+(i+1)*cols;
+                    }else{
+                        indexBuffer[index2 ++] = cols-1-j+(i+1)*cols;
+                        indexBuffer[index2 ++] = i*cols+(cols-1)-j;
+                    }
+                }else{
+                    //if last one...
+                    if(j == cols){
+                        indexBuffer[index2 ++] = j-1+(i+1)*cols;
+                        indexBuffer[index2 ++] = j-1+(i+1)*cols;
+                    }else{
+                        indexBuffer[index2 ++] = j+i*cols;
+                        indexBuffer[index2 ++] = j+(i+1)*cols;
+                    }
+                }
+            }
+        }*/
 
         // vertex binding description, concise version
         OGLBuffers.Attrib[] attributes = {

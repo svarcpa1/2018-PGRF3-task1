@@ -11,18 +11,14 @@ in float distance;
 uniform sampler2D textureSampler;
 uniform sampler2D textureSamplerDepth;
 uniform int modeOfLight, modeOfSurface, modeOfLightSource;
-//reflector
-uniform float spotCutOff;
 uniform float time;
 
 out vec4 outColor; // output from the fragment shader
 
 void main() {
-
-    //vec4 baseColor = texture(textureSampler,textCoordinates);
     vec4 baseColor = texture(textureSampler, textCoordinates);
 
-	//per vertex
+	//per vertex mode
 	if(modeOfLight==0){
 	    if(modeOfSurface==0){
             outColor = vec4(vertColor, 1.0);
@@ -46,6 +42,7 @@ void main() {
             }else{
                 outColor = outColor;
             }
+
 	    }else{
 	        outColor = vec4(vertColor, 1.0);
 
@@ -59,8 +56,8 @@ void main() {
 	    }
 	}
 
+    //per pixel mode
 	else{
-        //vec4 color = vec4(vertColor,1);
         vec3 ld = normalize( light );
         vec3 nd = normalize( normal );
         vec3 vd = normalize( viewDirection );
@@ -84,30 +81,52 @@ void main() {
         totalDiffuse = diffuse * NDotL * baseColor;
         totalSpecular = specular * (pow(NDotH, 16));
 
+        //spolight + testing if a object is in light or not
+        float spotOff = cos(radians(30));
         if(modeOfLightSource==1){
-            float spotEffect = max(dot(normalize(light-vec3(5,0+time/3,8)),normalize(-ld)),0);
-            float blend = clamp((spotEffect-spotCutOff)/(1-spotCutOff) ,0.0,1.0);
+            float spotEffect = max(dot(normalize(vec3(0,0,0)-vec3(5,0+time/3,8)),normalize(-ld)),0);
+            float blend = clamp((spotEffect-spotOff)/(1-spotOff) ,0.0,1.0);
 
-            if(spotEffect>spotCutOff){
+            if(spotEffect>spotOff){
                 //outColor = (totalAmbient + (totalDiffuse + totalSpecular));
                 outColor = mix(totalAmbient,(totalAmbient + att*(totalDiffuse + totalSpecular)),blend);
             }else{
                 outColor=totalAmbient;
             }
+
         }else{
             outColor = (totalAmbient + att*(totalDiffuse + totalSpecular));
         }
 
         vec3 textCoordinatesDepthTmp;
         textCoordinatesDepthTmp = (textCoordinatesDepth.xyz/textCoordinatesDepth.w + 1.)/2.;
-        //if(shadow)...
-        if ((texture(textureSamplerDepth, textCoordinatesDepthTmp.xy).z < textCoordinatesDepthTmp.z-0.0005)){
-            outColor=texture(textureSampler, textCoordinates)*totalAmbient;
-            //outColor=vec4(1,1,1,1);
-            //outColor=outColor*totalAmbient;
+
+        //changinb color, normla, texture
+        if(modeOfSurface==0){
+
+            if ((texture(textureSamplerDepth, textCoordinatesDepthTmp.xy).z < textCoordinatesDepthTmp.z-0.0005)){
+                outColor=vec4(0.8,0.2,0.2,1.0)*totalAmbient;
+            }else{
+                outColor=vec4(0.8,0.2,0.2,1.0)*outColor;
+            }
+
+        }else if(modeOfSurface==1){
+            vec4 outColor2 = texture2D(textureSampler, textCoordinates);
+
+            if ((texture(textureSamplerDepth, textCoordinatesDepthTmp.xy).z < textCoordinatesDepthTmp.z-0.0005)){
+                outColor=outColor2*totalAmbient;
+            }else{
+                outColor=outColor2*outColor;
+            }
+
         }else{
-            outColor=texture(textureSampler, textCoordinates)*outColor;
-            //outColor = outColor*vec4(0.2,0.2,0.6,1);
+            vec4 outColor2 = vec4(nd,1);
+
+            if ((texture(textureSamplerDepth, textCoordinatesDepthTmp.xy).z < textCoordinatesDepthTmp.z-0.0005)){
+                outColor=outColor2*totalAmbient;
+            }else{
+                outColor=outColor2*outColor;
+            }
         }
     }
 } 

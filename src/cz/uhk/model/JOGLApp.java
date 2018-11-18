@@ -30,11 +30,8 @@ public class JOGLApp {
 			canvas.addMouseMotionListener(ren);
 			canvas.addKeyListener(ren);
 	    	canvas.setSize( 512, 384 );
-	    	
-	    	
+
 	    	testFrame.add(canvas);
-			
-	        //shutdown the program on windows close event
 	        			
 	    	//final Animator animator = new Animator(canvas);
 	    	final FPSAnimator animator = new FPSAnimator(canvas, FPS, true);
@@ -55,7 +52,6 @@ public class JOGLApp {
 	    	testFrame.pack();
 	    	testFrame.setVisible(true);
             animator.start(); // start the animation loop
-            
             
 		} catch (Exception e) {
 			e.printStackTrace();

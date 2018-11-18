@@ -1,15 +1,13 @@
 #version 150
 
-in vec2 inPosition; //input from the vertex buffer
+in vec2 inPosition;
 in vec2 inTexture;
-in vec2 inTextureDepth;
 
 uniform mat4 viewMat;
 uniform mat4 projMat;
 uniform mat4 MVPMatLight;
 uniform float time;
 uniform int modeOfFunction, modeOfLight, modeOfSurface;
-uniform vec3 eyePosition;
 
 out vec3 vertColor;
 out vec2 textCoordinates;
@@ -52,7 +50,7 @@ vec3 getSphere(vec2 xy){
     return vec3(x, y, z);
 }
 //mine cylin
-vec3 getUfo(vec2 xy){
+vec3 getSlider(vec2 xy){
 	float s=  PI * 0.5 - PI * xy.x;
 	float t= (PI * 0.5 - PI * xy.y);
 
@@ -64,8 +62,8 @@ vec3 getUfo(vec2 xy){
 }
 //cylin
 vec3 getGoblet(vec2 xy){
-	float s=    PI * 0.5 - PI * xy.x;
-	float t= (PI * 0.5 - PI * xy.y)/1.5;
+	float s =  PI * 0.5 - PI * xy.x;
+	float t = (PI * 0.5 - PI * xy.y)/1.5;
 
     float theta = s;
 	float r = 1+cos(t);
@@ -107,8 +105,8 @@ vec3 getNormalDiff(vec2 xy){
         u = getTrampoline(xy + vec2(0.001,0)) - getTrampoline(xy - vec2(0.001,0));
         v = getTrampoline(xy + vec2(0, 0.001)) - getTrampoline(xy - vec2(0, 0.001));
     }else if(modeOfFunction==1){
-        u = getUfo(xy + vec2(0.001,0)) - getUfo(xy - vec2(0.001,0));
-        v = getUfo(xy + vec2(0, 0.001)) - getUfo(xy - vec2(0, 0.001));
+        u = getSlider(xy + vec2(0.001,0)) - getSlider(xy - vec2(0.001,0));
+        v = getSlider(xy + vec2(0, 0.001)) - getSlider(xy - vec2(0, 0.001));
     }else if(modeOfFunction==2){
         u = getGoblet(xy + vec2(0.001,0)) - getGoblet(xy - vec2(0.001,0));
         v = getGoblet(xy + vec2(0, 0.001)) - getGoblet(xy - vec2(0, 0.001));
@@ -122,16 +120,16 @@ vec3 getNormalDiff(vec2 xy){
     return cross(u,v);
 }
 
- //výpočet normál pomocí parciální derivace
- vec3 getSphereNormal(vec2 xy){
-     float az = xy.x * PI;
-     float ze = xy.y * PI/2;
-     float r = 1;
+//normlas counted by parcial derivation (sphere)
+vec3 getSphereNormal(vec2 xy){
+    float az = xy.x * PI;
+    float ze = xy.y * PI/2;
+    float r = 1;
 
-     vec3 dx = vec3(-sin(az)*cos(ze)*PI, cos(az)*cos(ze)*PI, 0);
-     vec3 dy = vec3(cos(az)*-sin(ze)*PI/2, sin(az)*-sin(ze)*PI/2, cos(ze)*PI/2);
-     return cross(dx,dy);
- }
+    vec3 dx = vec3(-sin(az)*cos(ze)*PI, cos(az)*cos(ze)*PI, 0);
+    vec3 dy = vec3(cos(az)*-sin(ze)*PI/2, sin(az)*-sin(ze)*PI/2, cos(ze)*PI/2);
+    return cross(dx,dy);
+}
 
 void main() {
     vec2 pos = inPosition*2 - 1;
@@ -145,7 +143,7 @@ void main() {
         //for moving light with us
         //normal = inverse(transpose(mat3(viewMat))) * normal;
     }
-    //generate "still" sphere
+    //generate moving sphere
     if(modeOfFunction == 10){
         pos4 = vec4(getSphere(pos)/3, 1.0);
         pos4 = vec4(pos4.x+1.8, pos4.y+0+time/10, (pos4.z+3), pos4.w);
@@ -163,8 +161,8 @@ void main() {
         normal= getNormalDiff(pos);
     }
     if(modeOfFunction == 1){
-        pos4 = vec4(getUfo(pos), 1.0);
-        pos4 = vec4(pos4.xy, pos4.z+ 1, pos4.w);
+        pos4 = vec4(getSlider(pos), 1.0);
+        pos4 = vec4(pos4.xy, pos4.z+1, pos4.w);
         normal= getNormalDiff(pos);
     }
     if(modeOfFunction == 2){
@@ -187,7 +185,7 @@ void main() {
 	gl_Position = projMat * viewMat * pos4;
 
 	//light
-	vec3 lightPos = vec3(5, 0+time/3, 4);
+	vec3 lightPos = vec3(5, 0+time/3, 8);
 	//this would be used for moving light with viewer
 	//light = lightPos-(viewMat*pos4).xyz;
 	light = lightPos-(pos4).xyz;
@@ -195,6 +193,7 @@ void main() {
 	//attenuation
 	distance = length(light);
 
+	//per vertec mode
 	if(modeOfLight==0){
         //depth texture
         textCoordinatesDepth = MVPMatLight*pos4;
@@ -216,9 +215,15 @@ void main() {
             vertColor = vertColor * normalize(normal);
         }
 
+	//per pixel mode
 	}else{
         //textures
-        textCoordinates=inTexture;
+        if(modeOfSurface==1){
+            textCoordinates=inTexture;
+        }else{
+            textCoordinates=vec2(0,0);
+        }
+
         textCoordinatesDepth = MVPMatLight*pos4;
     }
 }

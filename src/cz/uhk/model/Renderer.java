@@ -4,29 +4,22 @@ import com.jogamp.opengl.*;
 import cz.uhk.grid.GridFactory;
 import oglutils.*;
 import transforms.*;
-
 import java.awt.event.*;
 
 /**
- * GLSL sample:<br/>
- * Read and compile shader from files "/shader/glsl01/start.*" using ShaderUtils
- * class in oglutils package (older GLSL syntax can be seen in
- * "/shader/glsl01/startForOlderGLSL")<br/>
- * Manage (create, bind, draw) vertex and index buffers using OGLBuffers class
- * in oglutils package<br/>
  * Requires JOGL 2.3.0 or newer
- * 
- * @author PGRF FIM UHK
- * @version 2.0
- * @since 2015-09-05
+ *
+ * @author PGRF FIM UHK, Pavel ŠVARC
+ * @version 1.0
+ * @DATE 2018-11-18
  */
 public class Renderer implements GLEventListener, MouseListener,
-		MouseMotionListener, KeyListener {
+        MouseMotionListener, KeyListener {
 
-	private int width, height, ox, oy;
-	private boolean modeOfRendering = true, modeOfProjection = true;
-    private int locTime, locViewMat, locProjMat, locModeOfFunction, locModeOfLight, locEyePosition, locModeOfSurface,
-                locMVPMatLight, locSpotCutOff, locModeOfLightSource;
+    private int width, height, ox, oy;
+    private boolean modeOfRendering = true, modeOfProjection = true;
+    private int locTime, locViewMat, locProjMat, locModeOfFunction, locModeOfLight, locModeOfSurface,
+            locMVPMatLight, locSpotCutOff, locModeOfLightSource;
     private Vec3D positionLight, directionLight, upLight;
     private int functions=0, modeOfLight = 0, modeOfSurface = 1, modeOfLightSource=0;
     private float time = 0.5f;
@@ -34,38 +27,41 @@ public class Renderer implements GLEventListener, MouseListener,
 
     private int shaderProgram, shaderProgramLight;
 
-    private Mat4 viewMat, projMat, viewMatLight, projMatLight,  depthMatLight, MVPMatLight;
+    private Mat4 viewMat, projMat, viewMatLight, projMatLight, MVPMatLight;
     private Camera camera;
+    private OGLBuffers buffers;
+    private OGLTexture2D texture2D;
+    private OGLRenderTarget renderTarget;
+    private OGLTexture2D.Viewer textureViewer;
 
-	private OGLBuffers buffers;
-	private OGLTexture2D texture2D;
-	private OGLRenderTarget renderTarget;
-	private OGLTexture2D.Viewer textureViewer;
+    /**
+     *initialization method for opengl
+     * @param glDrawable
+     */
+    @Override
+    public void init(GLAutoDrawable glDrawable) {
 
-	@Override
-	public void init(GLAutoDrawable glDrawable) {
+        // check whether shaders are supported
+        GL2GL3 gl = glDrawable.getGL().getGL2GL3();
+        OGLUtils.shaderCheck(gl);
 
-	    // check whether shaders are supported
-		GL2GL3 gl = glDrawable.getGL().getGL2GL3();
-		OGLUtils.shaderCheck(gl);
-		
-		OGLUtils.printOGLparameters(gl);
+        OGLUtils.printOGLparameters(gl);
 
-		shaderProgram = ShaderUtils.loadProgram(gl, "/start.vert",
-				"/start.frag",
-				null,null,null,null);
+        shaderProgram = ShaderUtils.loadProgram(gl, "/start.vert",
+                "/start.frag",
+                null,null,null,null);
         shaderProgramLight = ShaderUtils.loadProgram(gl, "/light.vert",
                 "/light.frag",
                 null,null,null,null);
 
-		buffers= GridFactory.create(gl,50,50);
+        buffers= GridFactory.create(gl,50,50);
 
         Vec3D position = new Vec3D(5, 5, 5);
         Vec3D direction = new Vec3D(0, 0, 0);
         Vec3D up = new Vec3D(1, 0, 0);
 
         positionLight = new Vec3D(5, 0, 8);
-        directionLight = new Vec3D(0, 0, 0).sub(positionLight);
+        directionLight = new Vec3D(0, 2, 0).sub(positionLight);
         upLight = new Vec3D(0, 0, 1);
         projMatLight = new Mat4OrthoRH(20,20,-20, 200.0);
 
@@ -74,8 +70,8 @@ public class Renderer implements GLEventListener, MouseListener,
         MVPMatLight = viewMatLight.mul(projMatLight);
 
         camera = new Camera().withPosition(position)
-                 .withZenith(-Math.PI/5.)
-                 .withAzimuth(Math.PI*(5/4.));
+                .withZenith(-Math.PI/5.)
+                .withAzimuth(Math.PI*(5/4.));
 
         texture2D = new OGLTexture2D(gl, "/textures/stripes.jpg");
         textureViewer = new OGLTexture2D.Viewer(gl);
@@ -86,41 +82,46 @@ public class Renderer implements GLEventListener, MouseListener,
         //culling back faces
         gl.glCullFace(GL.GL_BACK);
         gl.glEnable(GL.GL_CULL_FACE);
-	}
+    }
 
     /**
-     *
+     *display method for opengl
      * @param glDrawable
      */
-	@Override
-	public void display(GLAutoDrawable glDrawable) {
-		GL2GL3 gl = glDrawable.getGL().getGL2GL3();
+    @Override
+    public void display(GLAutoDrawable glDrawable) {
+        GL2GL3 gl = glDrawable.getGL().getGL2GL3();
 
-		//choosing persp/ortho
-		if(modeOfProjection){
-			projMat = new Mat4PerspRH(Math.PI / 4, height / (double) width, 1, 100.0);
-		}else {
-			projMat = new Mat4OrthoRH(Math.PI / 4, height / (double) width, 1, 100.0);
-		}
+        //choosing persp/ortho
+        if(modeOfProjection){
+            projMat = new Mat4PerspRH(Math.PI / 4, height / (double) width, 1, 100.0);
+        }else {
+            projMat = new Mat4OrthoRH(10, 10, 1, 100);
+        }
 
         //choosing line/fill
-		if(modeOfRendering){
+        if(modeOfRendering){
             gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_FILL);
         }else {
             gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_LINE);
         }
 
-		//call render methods
+        //call render methods
         renderFromLight(gl, shaderProgramLight);
-		renderFromViewer(gl, shaderProgram);
+        renderFromViewer(gl, shaderProgram);
 
         //sides windows
-		gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_FILL);
-		textureViewer.view(texture2D,-1,-1,0.5 );
+        gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_FILL);
+        textureViewer.view(texture2D,-1,-1,0.5 );
         textureViewer.view(renderTarget.getColorTexture(), -1, -0.5, 0.5);
         textureViewer.view(renderTarget.getDepthTexture(), -1, 0, 0.5);
-	}
+    }
 
+    /**
+     *shader rendering from light position
+     * @param gl
+     * @param shaderProgramLight
+     */
     private void renderFromLight(GL2GL3 gl, int shaderProgramLight){
         gl.glUseProgram(shaderProgramLight);
         renderTarget.bind();
@@ -132,7 +133,6 @@ public class Renderer implements GLEventListener, MouseListener,
         locProjMat = gl.glGetUniformLocation(shaderProgramLight, "projMat");
         locTime = gl.glGetUniformLocation(shaderProgramLight, "time");
         locModeOfFunction = gl.glGetUniformLocation(shaderProgramLight, "modeOfFunction");
-        locEyePosition = gl.glGetUniformLocation(shaderProgramLight, "eyePosition");
         locModeOfSurface = gl.glGetUniformLocation(shaderProgramLight,"modeOfSurface");
         locMVPMatLight = gl.glGetUniformLocation(shaderProgramLight,"MVPMatLight");
 
@@ -142,7 +142,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
         //for moving shadows with light
         positionLight = new Vec3D(5, 0+time/3, 8);
-        directionLight = new Vec3D(0, 0, 0).sub(positionLight);
+        directionLight = new Vec3D(0, 2, 0).sub(positionLight);
         upLight = new Vec3D(0, 0, 1);
         projMatLight = new Mat4OrthoRH(10,10,-20, 200.0);
         viewMatLight = new Mat4ViewRH(positionLight, directionLight, upLight);
@@ -163,6 +163,11 @@ public class Renderer implements GLEventListener, MouseListener,
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
     }
 
+    /**
+     *shader rendering from viewer position
+     * @param gl
+     * @param shaderProgram
+     */
     private void renderFromViewer(GL2GL3 gl, int shaderProgram){
         gl.glUseProgram(shaderProgram);
         gl.glBindFramebuffer(GL2GL3.GL_FRAMEBUFFER, 0);
@@ -176,7 +181,6 @@ public class Renderer implements GLEventListener, MouseListener,
         locTime = gl.glGetUniformLocation(shaderProgram, "time");
         locModeOfFunction = gl.glGetUniformLocation(shaderProgram, "modeOfFunction");
         locModeOfLight = gl.glGetUniformLocation(shaderProgram, "modeOfLight");
-        locEyePosition = gl.glGetUniformLocation(shaderProgram, "eyePosition");
         locModeOfSurface = gl.glGetUniformLocation(shaderProgram,"modeOfSurface");
         locMVPMatLight = gl.glGetUniformLocation(shaderProgram,"MVPMatLight");
         locSpotCutOff = gl.glGetUniformLocation(shaderProgram,"spotOff");
@@ -196,7 +200,6 @@ public class Renderer implements GLEventListener, MouseListener,
         //texture
         texture2D.bind(shaderProgram,"textureSampler", 0);
         renderTarget.getDepthTexture().bind(shaderProgram,"textureSamplerDepth",1);
-        //buffers.draw(GL2GL3.GL_TRIANGLES,shaderProgram);
 
         //reflector
         gl.glUniform1f(locSpotCutOff,10.0f);
@@ -221,13 +224,14 @@ public class Renderer implements GLEventListener, MouseListener,
         //sun
         gl.glUniform1i(locModeOfFunction,12);
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
-
-        //eye
-        gl.glUniform3fv(locEyePosition,1, ToFloatArray.convert(camera.getPosition()) ,0);
     }
 
+    /**
+     *Method for electing which function should be display
+     * @param gl
+     */
     private void functionSelecting(GL2GL3 gl){
-        switch (functions% 5 ){
+        switch (functions % 5 ){
             case 0:
                 gl.glUniform1i(locModeOfFunction,0);
                 break;
@@ -235,11 +239,11 @@ public class Renderer implements GLEventListener, MouseListener,
                 gl.glUniform1i(locModeOfFunction,1);
                 break;
             case 2:
-				gl.glUniform1i(locModeOfFunction,2);
-				break;
-			case 3:
-				gl.glUniform1i(locModeOfFunction,3);
-				break;
+                gl.glUniform1i(locModeOfFunction,2);
+                break;
+            case 3:
+                gl.glUniform1i(locModeOfFunction,3);
+                break;
             case 4:
                 gl.glUniform1i(locModeOfFunction,4);
                 break;
@@ -248,70 +252,71 @@ public class Renderer implements GLEventListener, MouseListener,
 
     /**
      *
+     * Method for handeling reshaping of the screen
      * @param drawable
      * @param x
      * @param y
      * @param width
      * @param height
      */
-	@Override
-	public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
-		this.width = width;
-		this.height = height;
+    @Override
+    public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
+        this.width = width;
+        this.height = height;
 
-		if(modeOfProjection){
+        if(modeOfProjection){
             projMat = new Mat4PerspRH(Math.PI / 4, height / (double) width, 1, 100.0);
         }else {
             projMat = new Mat4OrthoRH(Math.PI / 4, height / (double) width, 1, 100.0);
         }
-	}
+    }
 
-	@Override
-	public void mouseClicked(MouseEvent e) {
-	}
-	@Override
-	public void mouseEntered(MouseEvent e) {
-	}
-	@Override
-	public void mouseExited(MouseEvent e) {
-	}
-	@Override
-	public void mousePressed(MouseEvent e) {
-		ox = e.getX();
-		oy = e.getY();
-	}
-	@Override
-	public void mouseReleased(MouseEvent e) {
+    @Override
+    public void mouseClicked(MouseEvent e) {
+    }
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
+    @Override
+    public void mouseExited(MouseEvent e) {
+    }
+    @Override
+    public void mousePressed(MouseEvent e) {
+        ox = e.getX();
+        oy = e.getY();
+    }
+    @Override
+    public void mouseReleased(MouseEvent e) {
 
-	}
-	@Override
-	public void mouseDragged(MouseEvent e) {
-		camera = camera.addAzimuth(Math.PI * (ox - e.getX()) / width).addZenith(Math.PI * (e.getY() - oy) / width);
-		ox = e.getX();
-		oy = e.getY();
-	}
-	@Override
-	public void mouseMoved(MouseEvent e) {
-	}
-	@Override
-	public void keyPressed(KeyEvent e) {
-		switch (e.getKeyCode()) {
-			case KeyEvent.VK_A:
-			    camera = camera.left(0.1);
-			    break;
-			case KeyEvent.VK_S:
-			    camera = camera.backward(0.1);
-			    break;
-			case KeyEvent.VK_D:
-			    camera = camera.right(0.1);
-			    break;
-			case KeyEvent.VK_W:
-			    camera = camera.forward(0.1);
-			    break;
-			case KeyEvent.VK_R:
-			    camera = camera.up(0.1);
-			    break;
-			case KeyEvent.VK_F:
+    }
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        camera = camera.addAzimuth(Math.PI * (ox - e.getX()) / width).addZenith(Math.PI * (e.getY() - oy) / width);
+        ox = e.getX();
+        oy = e.getY();
+    }
+    @Override
+    public void mouseMoved(MouseEvent e) {
+    }
+    @Override
+    public void keyPressed(KeyEvent e) {
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_A:
+                camera = camera.left(0.1);
+                break;
+            case KeyEvent.VK_S:
+                camera = camera.backward(0.1);
+                break;
+            case KeyEvent.VK_D:
+                camera = camera.right(0.1);
+                break;
+            case KeyEvent.VK_W:
+                camera = camera.forward(0.1);
+                break;
+            case KeyEvent.VK_R:
+                camera = camera.up(0.1);
+                break;
+            case KeyEvent.VK_F:
                 camera = camera.down(0.1);
                 break;
             //M for changing mode (fill, line)
@@ -329,34 +334,31 @@ public class Renderer implements GLEventListener, MouseListener,
             //B for changing light (0 per vertex, i per pixel)
             case KeyEvent.VK_B:
                 modeOfLight=(modeOfLight+1)%2;
-                System.out.println(modeOfLight);
                 break;
             //V for changing surface (0 color, 1 texture, 2 normals)
             case KeyEvent.VK_V:
                 modeOfSurface=(modeOfSurface+1)%3;
-                System.out.println(modeOfSurface);
                 break;
             //C for changing light mode (reflector or not)
             case KeyEvent.VK_C:
                 modeOfLightSource=(modeOfLightSource+1)%2;
-                System.out.println(modeOfLightSource);
                 break;
-		}
-	}
-	@Override
-	public void keyReleased(KeyEvent e) {
-	}
-	@Override
-	public void keyTyped(KeyEvent e) {
-	}
+        }
+    }
+    @Override
+    public void keyReleased(KeyEvent e) {
+    }
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
 
     /**
-     *
+     * Method called on dispose
      * @param glDrawable
      */
-	@Override
-	public void dispose(GLAutoDrawable glDrawable) {
-		GL2GL3 gl = glDrawable.getGL().getGL2GL3();
-		gl.glDeleteProgram(shaderProgram);
-	}
+    @Override
+    public void dispose(GLAutoDrawable glDrawable) {
+        GL2GL3 gl = glDrawable.getGL().getGL2GL3();
+        gl.glDeleteProgram(shaderProgram);
+    }
 }

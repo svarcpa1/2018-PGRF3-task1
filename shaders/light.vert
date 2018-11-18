@@ -1,6 +1,6 @@
 #version 150
 
-in vec2 inPosition; //input from the vertex buffer
+in vec2 inPosition;
 in vec2 inTexture;
 
 uniform mat4 MVPMatLight;
@@ -33,7 +33,9 @@ vec3 getTrampoline(vec2 xy){
 }
 //kart
 vec3 getSphere(vec2 xy){
+    //0-2pi
     float azimuth = xy.x * PI;
+    //0-pi
     float zenith = xy.y * PI/2;
     float r = 1;
 
@@ -44,7 +46,7 @@ vec3 getSphere(vec2 xy){
     return vec3(x, y, z);
 }
 //mine cylin
-vec3 getUfo(vec2 xy){
+vec3 getSlider(vec2 xy){
 	float s=  PI * 0.5 - PI * xy.x;
 	float t= (PI * 0.5 - PI * xy.y);
 
@@ -56,14 +58,14 @@ vec3 getUfo(vec2 xy){
 }
 //cylin
 vec3 getGoblet(vec2 xy){
-	float s= PI * 0.5 - PI * xy.x;
-	float t= (PI * 0.5 - PI * xy.y)/1.5;
+	float s =  PI * 0.5 - PI * xy.x;
+	float t = (PI * 0.5 - PI * xy.y)/1.5;
 
     float theta = s;
 	float r = 1+cos(t);
 	float z =t;
 
-	return vec3(r*cos(theta), r*sin(theta),z);
+	return vec3(r*cos(theta), r*sin(theta),z)/2;
 }
 // mine spheric
 vec3 getSomething(vec2 xy){
@@ -94,13 +96,12 @@ vec3 getElephant(vec2 xy){
 vec3 getNormalDiff(vec2 xy){
     vec3 u;
     vec3 v;
-
       if(modeOfFunction==0){
           u = getTrampoline(xy + vec2(0.001,0)) - getTrampoline(xy - vec2(0.001,0));
           v = getTrampoline(xy + vec2(0, 0.001)) - getTrampoline(xy - vec2(0, 0.001));
       }else if(modeOfFunction==1){
-          u = getUfo(xy + vec2(0.001,0)) - getUfo(xy - vec2(0.001,0));
-          v = getUfo(xy + vec2(0, 0.001)) - getUfo(xy - vec2(0, 0.001));
+            u = getSlider(xy + vec2(0.001,0)) - getSlider(xy - vec2(0.001,0));
+            v = getSlider(xy + vec2(0, 0.001)) - getSlider(xy - vec2(0, 0.001));
       }else if(modeOfFunction==2){
           u = getGoblet(xy + vec2(0.001,0)) - getGoblet(xy - vec2(0.001,0));
           v = getGoblet(xy + vec2(0, 0.001)) - getGoblet(xy - vec2(0, 0.001));
@@ -147,12 +148,12 @@ void main() {
         normal= getNormalDiff(pos);
     }
     if(modeOfFunction == 1){
-        pos4 = vec4(getUfo(pos)/2, 1.0);
-        pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
+        pos4 = vec4(getSlider(pos), 1.0);
+        pos4 = vec4(pos4.xy, pos4.z+1, pos4.w);
         normal= getNormalDiff(pos);
     }
     if(modeOfFunction == 2){
-        pos4 = vec4(getGoblet(pos)/2, 1.0);
+        pos4 = vec4(getGoblet(pos), 1.0);
         pos4 = vec4(pos4.xy, pos4.z +3.5, pos4.w);
         normal= getNormalDiff(pos);
     }
