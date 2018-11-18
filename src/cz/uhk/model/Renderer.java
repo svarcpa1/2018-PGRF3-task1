@@ -338,7 +338,7 @@ public class Renderer implements GLEventListener, MouseListener,
             case KeyEvent.VK_V:
                 modeOfSurface=(modeOfSurface+1)%3;
                 break;
-            //C for changing light mode (reflector or not)
+            //C for changing light mode (reflector or not in per pixel only)
             case KeyEvent.VK_C:
                 modeOfLightSource=(modeOfLightSource+1)%2;
                 break;
