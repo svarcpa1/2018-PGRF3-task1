@@ -30,7 +30,7 @@ public class GridFactory {
         int[] indexBuffer = new int[(rows-1)*(cols-1)*2*3];
         int index2=0;
 
-        //triangles
+/*        //triangles
         for (int i =0; i<cols-1; i++){
             for(int j=0; j<rows-1; j++){
                 indexBuffer[index2++] = (j+(i*rows));
@@ -41,33 +41,34 @@ public class GridFactory {
                 indexBuffer[index2++] = (j+1+rows+(i*rows));
                 indexBuffer[index2++] = (j+rows+(i*rows));
             }
-        }
+        }*/
 
-       /* //trinagle strip
-        for(int i = 0; i <= rows-1; i++){
+        //trinagle strip
+        for(int i = 0; i < rows-1; i++){
             for(int j =0; j <= cols; j++){
                 //controlling if the row is even
                 if(i%2 != 0){
-                    //if last one
+                    //if last one...
                     if(j == cols){
-                        indexBuffer[index2 ++] = cols-j+(i+1)*cols;
-                        indexBuffer[index2 ++] = cols-j+(i+1)*cols;
+                        indexBuffer[index2++] = cols-j+(i+1)*cols;
+                        indexBuffer[index2++] = cols-j+(i+1)*cols;
                     }else{
-                        indexBuffer[index2 ++] = cols-1-j+(i+1)*cols;
-                        indexBuffer[index2 ++] = i*cols+(cols-1)-j;
+                        indexBuffer[index2++] = i*cols+(cols-1)-j;
+                        indexBuffer[index2++] = cols-1-j+(i+1)*cols;
                     }
                 }else{
                     //if last one...
                     if(j == cols){
-                        indexBuffer[index2 ++] = j-1+(i+1)*cols;
-                        indexBuffer[index2 ++] = j-1+(i+1)*cols;
+                        indexBuffer[index2++] = j-1+(i+1)*cols;
+                        indexBuffer[index2++] = j-1+(i+1)*cols;
+
                     }else{
-                        indexBuffer[index2 ++] = j+i*cols;
-                        indexBuffer[index2 ++] = j+(i+1)*cols;
+                        indexBuffer[index2++] = j+(i+1)*cols;
+                        indexBuffer[index2++] = j+i*cols;
                     }
                 }
             }
-        }*/
+        }
 
         // vertex binding description, concise version
         OGLBuffers.Attrib[] attributes = {

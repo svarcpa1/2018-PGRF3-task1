@@ -153,14 +153,14 @@ public class Renderer implements GLEventListener, MouseListener,
 
         //functions
         functionSelecting(gl);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+        buffers.draw(GL2GL3.GL_TRIANGLE_STRIP, shaderProgramLight);
 
         //still sphere
         gl.glUniform1i(locModeOfFunction,10);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+        buffers.draw(GL2GL3.GL_TRIANGLE_STRIP, shaderProgramLight);
         //still plain
         gl.glUniform1i(locModeOfFunction,11);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgramLight);
+        buffers.draw(GL2GL3.GL_TRIANGLE_STRIP, shaderProgramLight);
     }
 
     /**
@@ -185,7 +185,6 @@ public class Renderer implements GLEventListener, MouseListener,
         locMVPMatLight = gl.glGetUniformLocation(shaderProgram,"MVPMatLight");
         locSpotCutOff = gl.glGetUniformLocation(shaderProgram,"spotOff");
         locModeOfLightSource = gl.glGetUniformLocation(shaderProgram,"modeOfLightSource");
-
 
         time = time + tmp;
         if(time >= 100.0f) tmp = -1f;
@@ -213,17 +212,17 @@ public class Renderer implements GLEventListener, MouseListener,
 
         //functions
         functionSelecting(gl);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        buffers.draw(GL2GL3.GL_TRIANGLE_STRIP, shaderProgram);
 
         //still sphere
         gl.glUniform1i(locModeOfFunction,10);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        buffers.draw(GL2GL3.GL_TRIANGLE_STRIP, shaderProgram);
         //still plain
         gl.glUniform1i(locModeOfFunction,11);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        buffers.draw(GL2GL3.GL_TRIANGLE_STRIP, shaderProgram);
         //sun
         gl.glUniform1i(locModeOfFunction,12);
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        buffers.draw(GL2GL3.GL_TRIANGLE_STRIP, shaderProgram);
     }
 
     /**
